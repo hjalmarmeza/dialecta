@@ -426,15 +426,27 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(getT().unsupported);
     }
 
-    // --- CARGADO DINÁMICO DE VOCES DISPONIBLES EN EL SISTEMA --- //
+    // --- CARGADO DINÁMICO DE VOCES (Simplificado a Hombre y Mujer) --- //
     function populateVoices() {
         if (!synth) return;
         const voices = synth.getVoices();
         if (voices.length === 0) return;
 
         const currentLangPrefix = myLangSelect.value.split('-')[0];
-        // Filtrar voces que coincidan con "Mi Idioma" base
-        const relevantVoices = voices.filter(v => v.lang.startsWith(currentLangPrefix));
+
+        // Mapeo preferible para identificar qué voz es mujer y qué voz es hombre según el sistema web (Google Chrome / Safari)
+        const filters = [
+            {
+                id: "mujer",
+                label: "👩 Voz de Mujer (Google)",
+                keywords: ["Google español", "Google US English", "Google français", "Paulina", "Samantha", "Monica", "Sabina", "Amelie", "Karen", "Victoria"]
+            },
+            {
+                id: "hombre",
+                label: "👨 Voz de Hombre (Google)",
+                keywords: ["Google UK English Male", "Jorge", "Alex", "Daniel", "Thomas", "Diego", "Paul"]
+            }
+        ];
 
         const t = getT();
         const currentVal = voiceSelect.value;
@@ -442,20 +454,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         voiceSelect.innerHTML = `<option value="">${t.autoVoice}</option>`;
 
-        relevantVoices.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.voiceURI;
-            opt.textContent = v.name;
-            voiceSelect.appendChild(opt);
+        filters.forEach(filter => {
+            // Buscamos 1 voz maestra por perfil que pertenezca al idioma actual
+            const bestVoice = voices.find(v =>
+                v.lang.startsWith(currentLangPrefix) &&
+                filter.keywords.some(kw => v.name.includes(kw))
+            );
+
+            // Si la encontramos, la agregamos
+            if (bestVoice) {
+                const opt = document.createElement('option');
+                opt.value = bestVoice.voiceURI;
+                opt.textContent = filter.label;
+                voiceSelect.appendChild(opt);
+            }
         });
 
-        // Intentar mantener la voz seleccionada o guardar
-        if (currentVal && relevantVoices.find(v => v.voiceURI === currentVal)) {
+        // Intentar mantener la selección anterior
+        if (currentVal && Array.from(voiceSelect.options).find(o => o.value === currentVal)) {
             voiceSelect.value = currentVal;
-        } else if (storedVal && relevantVoices.find(v => v.voiceURI === storedVal)) {
+        } else if (storedVal && Array.from(voiceSelect.options).find(o => o.value === storedVal)) {
             voiceSelect.value = storedVal;
         } else {
-            voiceSelect.value = "";
+            // Si el anterior no existe, forzamos seleccionar la voz de mujer por defecto
+            if (voiceSelect.options.length > 1) {
+                voiceSelect.selectedIndex = 1;
+                localStorage.setItem('lingoVoice', voiceSelect.value);
+            }
         }
     }
 
@@ -468,20 +493,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // Re-pintar lista de voces de lectura cuando el idioma base cambie
     myLangSelect.addEventListener('change', populateVoices);
-    // --- 2. FUNCIÓN DE TRADUCCIÓN GRATUITA (Hack de Google Translate) --- //
-    // NOTA: Para producción real en el futuro, es mejor tu backend de Google Apps Script o una API oficial
+    // --- 2. FUNCIÓN DE TRADUCCIÓN GRATUITA (Hack de Google Translate + Memoria) --- //
     async function translateText(text, sourceLang, targetLang) {
-        // Obtenemos solo los primeros dos caracteres (ej. 'es' de 'es-ES' o 'en' de 'en-US')
+        if (!text) return "";
+
         const sl = sourceLang.split('-')[0];
         const tl = targetLang.split('-')[0];
+
+        // Memoria Caché inmediata para evitar el límite rápido de traducciones al refrescar la web
+        const cacheKey = `tr_${sl}_${tl}_${text.substring(0, 250)}`;
+        const localCache = sessionStorage.getItem(cacheKey);
+
+        if (localCache) {
+            return localCache;
+        }
 
         try {
             const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
             const data = await response.json();
-            // Retorna solo el texto traducido principal
-            return data[0].map(item => item[0]).join('');
+
+            const translatedResult = data[0].map(item => item[0]).join('');
+
+            // Guardamos en la memoria para que si recargamos en 1 minuto no llamemos a Google 50 veces igual y nos bloqueen.
+            sessionStorage.setItem(cacheKey, translatedResult);
+
+            return translatedResult;
         } catch (error) {
-            console.error("Error al traducir:", error);
+            console.error("Error al traducir (Posible bloqueo por límite de Google). Mostrando original:", error);
             return text; // Fallback
         }
     }
@@ -490,17 +528,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function speakText(text, lang) {
         if (!synth) return;
 
-        // Cancelar si algo estaba hablando ya
+        // Limpiar caché TTS interno por seguridad de sistema
         synth.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
 
-        // Redujimos la velocidad (rate) drásticamente. 
-        // 1.0 en algunos sistemas suena como locutor de radio apresurado. 0.85 es más natural y pausado.
-        utterance.rate = 0.85;
-        // Bajar LIGERAMENTE el tono (pitch) también ayuda a que la voz suene menos robótica/aguda
-        utterance.pitch = 0.95;
+        // Las voces de la web como Google son naturales, bajémomos muy sutilmente pero no a 0.85 ya que silencia el Play a veces
+        utterance.rate = 0.95;
 
         // Inyectar la voz personalizada (si está definida y si corresponde al idioma que estamos por hablar)
         const voices = synth.getVoices();
