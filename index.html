@@ -69,11 +69,24 @@
             </div>
 
             <div class="user-config">
-                <div class="input-group">
-                    <label for="username"><i class="ph ph-user"></i> <span data-i18n="yourName">Tu
-                            Nombre:</span></label>
-                    <input type="text" id="username" class="glass-input" placeholder="Ej: Juan"
-                        data-i18n-placeholder="namePlaceholder" required>
+                <div class="user-inputs" style="display:flex; flex-direction:column; gap:12px; flex: 1;">
+                    <div class="input-group" style="max-width: 100%;">
+                        <label for="username"><i class="ph ph-user"></i> <span data-i18n="yourName">Tu
+                                Nombre:</span></label>
+                        <input type="text" id="username" class="glass-input" placeholder="Ej: Juan"
+                            data-i18n-placeholder="namePlaceholder" required>
+                    </div>
+
+                    <div class="input-group" style="max-width: 100%;">
+                        <label for="voice-select"><i class="ph ph-speaker-high"></i> <span
+                                data-i18n="voiceLabel">Voz:</span></label>
+                        <div class="select-wrapper">
+                            <select id="voice-select" class="glass-select">
+                                <option value="" data-i18n="autoVoice">Automática</option>
+                            </select>
+                            <i class="ph ph-caret-down select-icon"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="lang-group">

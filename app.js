@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const myLangSelect = document.getElementById('my-lang');
     const targetLangSelect = document.getElementById('target-lang');
     const swapLangBtn = document.getElementById('swap-lang-btn');
+    const voiceSelect = document.getElementById('voice-select');
     const usernameInput = document.getElementById('username');
     const chatHistory = document.getElementById('chat-history');
     const roomIdDisplay = document.getElementById('room-id-display');
@@ -57,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: "¡Copiado!", youString: " (Tú)", noNameString: "Tú (Aún sin nombre)",
             anon: "Usuario Anónimo", youMsg: "Tú",
             shareSubject: "Invitación a Dialecta de ",
-            shareBody: "Únete a mi sala en Dialecta para traducir nuestras voces en tiempo real:"
+            shareBody: "Únete a mi sala en Dialecta para traducir nuestras voces en tiempo real:",
+            voiceLabel: "Voz:", autoVoice: "Automática"
         },
         'en': {
             roomLabel: "Room:", inviteBtn: "Invite", inThisRoom: "In this room", yourName: "Your Name:",
@@ -72,7 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: "Copied!", youString: " (You)", noNameString: "You (No name yet)",
             anon: "Anonymous User", youMsg: "You",
             shareSubject: "Dialecta invitation from ",
-            shareBody: "Join my Dialecta room to translate our voices in real time:"
+            shareBody: "Join my Dialecta room to translate our voices in real time:",
+            voiceLabel: "Voice:", autoVoice: "Automatic"
         },
         'fr': {
             roomLabel: "Salle:", inviteBtn: "Inviter", inThisRoom: "Dans cette salle", yourName: "Ton Nom:",
@@ -87,7 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
             copied: "Copié!", youString: " (Moi)", noNameString: "Moi (Anonyme)",
             anon: "Anonyme", youMsg: "Moi",
             shareSubject: "Invitation Dialecta de ",
-            shareBody: "Rejoins ma salle Dialecta pour traduire nos voix en direct:"
+            shareBody: "Rejoins ma salle Dialecta pour traduire nos voix en direct:",
+            voiceLabel: "Voix:", autoVoice: "Automatique"
         }
     };
 
@@ -122,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('lingoName');
     const savedLang = localStorage.getItem('lingoLang');
     const savedTargetLang = localStorage.getItem('lingoTargetLang');
+    const savedVoice = localStorage.getItem('lingoVoice');
 
     if (savedName) {
         usernameInput.value = savedName;
@@ -157,6 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     targetLangSelect.addEventListener('change', () => {
         localStorage.setItem('lingoTargetLang', targetLangSelect.value);
+    });
+
+    voiceSelect.addEventListener('change', () => {
+        localStorage.setItem('lingoVoice', voiceSelect.value);
     });
 
     swapLangBtn.addEventListener('click', () => {
@@ -361,6 +370,46 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(getT().unsupported);
     }
 
+    // --- CARGADO DINÁMICO DE VOCES DISPONIBLES EN EL SISTEMA --- //
+    function populateVoices() {
+        if (!synth) return;
+        const voices = synth.getVoices();
+        if (voices.length === 0) return;
+
+        const currentLangPrefix = myLangSelect.value.split('-')[0];
+        // Filtrar voces que coincidan con "Mi Idioma" base
+        const relevantVoices = voices.filter(v => v.lang.startsWith(currentLangPrefix));
+
+        const t = getT();
+        const currentVal = voiceSelect.value;
+        const storedVal = localStorage.getItem('lingoVoice');
+
+        voiceSelect.innerHTML = `<option value="">${t.autoVoice}</option>`;
+
+        relevantVoices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.voiceURI;
+            opt.textContent = v.name;
+            voiceSelect.appendChild(opt);
+        });
+
+        // Intentar mantener la voz seleccionada o guardar
+        if (currentVal && relevantVoices.find(v => v.voiceURI === currentVal)) {
+            voiceSelect.value = currentVal;
+        } else if (storedVal && relevantVoices.find(v => v.voiceURI === storedVal)) {
+            voiceSelect.value = storedVal;
+        } else {
+            voiceSelect.value = "";
+        }
+    }
+
+    if (synth) {
+        synth.onvoiceschanged = populateVoices;
+    }
+    // Re-pintar lista de voces de lectura cuando el idioma base cambie
+    myLangSelect.addEventListener('change', populateVoices);
+
+
     // --- 2. FUNCIÓN DE TRADUCCIÓN GRATUITA (Hack de Google Translate) --- //
     // NOTA: Para producción real en el futuro, es mejor tu backend de Google Apps Script o una API oficial
     async function translateText(text, sourceLang, targetLang) {
@@ -390,6 +439,17 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
         // Podemos hacer que suene un poco más suave
         utterance.rate = 1.0;
+
+        // Inyectar la voz personalizada (si está definida y si corresponde al idioma que estamos por hablar)
+        const voices = synth.getVoices();
+        const selectedVoiceURI = voiceSelect.value;
+
+        if (selectedVoiceURI) {
+            const chosen = voices.find(v => v.voiceURI === selectedVoiceURI);
+            if (chosen && chosen.lang.startsWith(lang.split('-')[0])) {
+                utterance.voice = chosen;
+            }
+        }
 
         // Efecto visual al hablar
         utterance.onstart = () => { document.body.style.boxShadow = "inset 0 0 50px var(--accent-glow)"; };
