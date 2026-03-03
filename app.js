@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, push, onChildAdded, onChildRemoved, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBUhWqhxZk3Gvhjz66D02LUJgcytFbS4bo",
@@ -60,7 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             anon: "Usuario Anónimo", youMsg: "Tú",
             shareSubject: "Invitación a Dialecta de ",
             shareBody: "Únete a mi sala en Dialecta para traducir nuestras voces en tiempo real:",
-            voiceLabel: "Voz:", autoVoice: "Automática"
+            voiceLabel: "Voz:", autoVoice: "Automática",
+            clearConfirm: "¿Seguro que quieres borrar todos los mensajes de esta sala para ambos?"
         },
         'en': {
             roomLabel: "Room:", inviteBtn: "Invite", inThisRoom: "In this room", yourName: "Your Name:",
@@ -76,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
             anon: "Anonymous User", youMsg: "You",
             shareSubject: "Dialecta invitation from ",
             shareBody: "Join my Dialecta room to translate our voices in real time:",
-            voiceLabel: "Voice:", autoVoice: "Automatic"
+            voiceLabel: "Voice:", autoVoice: "Automatic",
+            clearConfirm: "Are you sure you want to clear all messages in this room for both of you?"
         },
         'fr': {
             roomLabel: "Salle:", inviteBtn: "Inviter", inThisRoom: "Dans cette salle", yourName: "Ton Nom:",
@@ -92,7 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             anon: "Anonyme", youMsg: "Moi",
             shareSubject: "Invitation Dialecta de ",
             shareBody: "Rejoins ma salle Dialecta pour traduire nos voix en direct:",
-            voiceLabel: "Voix:", autoVoice: "Automatique"
+            voiceLabel: "Voix:", autoVoice: "Automatique",
+            clearConfirm: "Êtes-vous sûr de vouloir effacer tous les messages de cette salle pour tous les deux ?"
         }
     };
 
@@ -232,6 +235,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONEXIÓN REAL CON FIREBASE (RECIBIR MENSAJES) --- //
     const messagesRef = ref(db, `rooms/${currentRoom}/messages`);
+
+    // Lógica para el botón de borrar sala
+    const clearChatBtn = document.getElementById('clear-chat-btn');
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener('click', () => {
+            if (confirm(getT().clearConfirm)) {
+                // Borrar la colección entera de Firebase
+                remove(messagesRef).catch(err => {
+                    console.error("No se pudo limpiar la base de datos:", err);
+                    alert("Asegúrate de estar en el enlace público para borrar los mensajes.");
+                });
+            }
+        });
+    }
+
+    // Detectar cuando alguien borra la sala entera o mis mensajes
+    onChildRemoved(messagesRef, (oldSnapshot) => {
+        // Al removerse el primer elemento, limpiamos el historial visual entero
+        // Ocultamos la burbuja inicial o los mensajes existentes
+        const bubbles = document.querySelectorAll('.message-bubble');
+        bubbles.forEach(b => b.remove());
+
+        // Mostrar de nuevo el mensaje del sistema
+        const systemMsg = chatHistory.querySelector('.system-message');
+        if (systemMsg) systemMsg.style.display = 'flex';
+    });
+
     onChildAdded(messagesRef, async (snapshot) => {
         const msg = snapshot.val();
         const miIdioma = myLangSelect.value;
