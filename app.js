@@ -546,33 +546,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. FUNCIÓN PARA HABLAR EL TEXTO TRADUCIDO --- //
     function speakText(text, lang) {
-        if (!synth) return;
+        if (!synth || !text) return;
 
         // Limpiar caché TTS interno por seguridad de sistema
         synth.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(text);
+        // Aplicamos el formateo y pausas sintéticas ANTES de hablar
+        // Esto le da a la voz IA el "respiro" y la entonación que requiere para sonar humana.
+        let formattedText = text.replace(/ (pero|porque|aunque|entonces|además|sin embargo|y|but|because|although|then|and|mais|parce que|donc|et) /gi, ', $1 ');
+        formattedText = formattedText.charAt(0).toUpperCase() + formattedText.slice(1);
+        if (!/[.!?]$/.test(formattedText)) {
+            formattedText += ".";
+        }
+
+        const utterance = new SpeechSynthesisUtterance(formattedText);
         utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
 
         // Afinación conversacional: 0.9 no dispara el bug de silencio en iOS pero le da un respiro a la voz
         utterance.rate = 0.9;
-        // Bajar LIGERAMENTE el tono le da naturalidad "humana" en vez de asisente aguda
+        // Bajar LIGERAMENTE el tono le da naturalidad "humana" en vez de adolescente aguda
         utterance.pitch = 0.95;
 
-        // Inyectar la voz personalizada (si está definida y si corresponde al idioma que estamos por hablar)
+        // Inyectar la voz personalizada (si está definida)
         const voices = synth.getVoices();
         const selectedVoiceURI = voiceSelect.value;
-
         if (selectedVoiceURI) {
             const chosen = voices.find(v => v.voiceURI === selectedVoiceURI);
-            if (chosen) { // Quité el filtro estricto para forzar aplicación de la voz elegida
-                utterance.voice = chosen;
-            }
+            if (chosen) utterance.voice = chosen;
         }
 
         // Efecto visual al hablar
         utterance.onstart = () => { document.body.style.boxShadow = "inset 0 0 50px var(--accent-glow)"; };
         utterance.onend = () => { document.body.style.boxShadow = "none"; };
+        utterance.onerror = () => { document.body.style.boxShadow = "none"; };
 
         synth.speak(utterance);
     }
