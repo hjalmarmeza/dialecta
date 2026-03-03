@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialecta - Traductor en Tiempo Real</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <!-- Íconos (Phosphor Icons - muy premium) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Fondo Animado -->
+    <div class="ambient-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- UI Principal -->
+    <main class="app-container">
+
+        <!-- Cabecera / Configurador de Idiomas -->
+        <header class="glass-header">
+            <div class="logo-area">
+                <i class="ph-fill ph-waves"></i>
+                <h1>Dialecta</h1>
+            </div>
+
+            <div class="room-info">
+                <div class="room-badge">
+                    <span class="status-dot"></span>
+                    Sala: <strong id="room-id-display">creando...</strong>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="contacts-btn" class="glass-btn-small" style="background: rgba(255,255,255,0.05);">
+                        <i class="ph ph-users"></i>
+                    </button>
+                    <button id="invite-btn" class="glass-btn-small">
+                        <i class="ph ph-share-network"></i> Invitar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Contactos (Oculto por defecto) -->
+            <div id="contacts-panel" class="contacts-panel hidden">
+                <div class="contacts-header">
+                    <h3>En esta sala</h3>
+                    <button id="close-contacts" class="close-btn"><i class="ph ph-x"></i></button>
+                </div>
+                <ul class="contacts-list" id="contacts-list">
+                    <!-- Los contactos se inyectarán aquí por JS -->
+                    <li class="contact-item self-contact">
+                        <div class="contact-avatar"><i class="ph-fill ph-user"></i></div>
+                        <div class="contact-details">
+                            <span class="contact-name">Tú (Aún sin nombre)</span>
+                            <span class="contact-lang">Español</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="user-config">
+                <div class="input-group">
+                    <label for="username"><i class="ph ph-user"></i> Tu Nombre:</label>
+                    <input type="text" id="username" class="glass-input" placeholder="Ej: Tío Hjalmar" required>
+                </div>
+
+                <div class="lang-group">
+                    <label for="my-lang"><i class="ph ph-translate"></i> Mi Idioma:</label>
+                    <div class="select-wrapper">
+                        <select id="my-lang" class="glass-select">
+                            <option value="es-ES" selected>Español</option>
+                            <option value="en-US">English (US)</option>
+                            <option value="fr-FR">Français</option>
+                            <option value="de-DE">Deutsch</option>
+                            <option value="it-IT">Italiano</option>
+                            <option value="pt-BR">Português (BR)</option>
+                        </select>
+                        <i class="ph ph-caret-down select-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Historial de Conversación -->
+        <section class="chat-history" id="chat-history">
+
+            <div class="system-message">
+                <i class="ph ph-shield-check"></i>
+                <span>Sala segura. Elige tu idioma y mantén presionado el botón central para hablar.</span>
+            </div>
+
+        </section>
+
+        <!-- Controles Inferiores (Walkie-Talkie) -->
+        <footer class="ptt-controls">
+            <div class="status-indicator" id="status-text">Listo para transmitir</div>
+
+            <div class="ptt-wrapper">
+                <div class="ripple-ring rings-1"></div>
+                <div class="ripple-ring rings-2"></div>
+
+                <button id="ptt-button" class="ptt-btn" aria-label="Mantener presionado para hablar">
+                    <i class="ph-fill ph-microphone"></i>
+                </button>
+            </div>
+
+            <p class="instruction">Mantén presionado para hablar</p>
+        </footer>
+
+        <!-- Modal de Compartir -->
+        <div id="share-modal" class="share-modal hidden">
+            <div class="share-content">
+                <div class="share-header">
+                    <h3>Invitar a un familiar</h3>
+                    <button id="close-share" class="close-btn"><i class="ph ph-x"></i></button>
+                </div>
+                <p class="share-desc">¿Por dónde quieres enviar la invitación a la sala?</p>
+                <div class="share-options">
+                    <button class="share-btn whatsapp" id="share-wa">
+                        <i class="ph-fill ph-whatsapp-logo"></i> WhatsApp
+                    </button>
+                    <button class="share-btn telegram" id="share-tg">
+                        <i class="ph-fill ph-telegram-logo"></i> Telegram
+                    </button>
+                    <button class="share-btn email" id="share-email">
+                        <i class="ph-fill ph-envelope"></i> Correo
+                    </button>
+                    <button class="share-btn copy" id="share-copy">
+                        <i class="ph-fill ph-copy"></i> Copiar Link
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
