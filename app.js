@@ -633,6 +633,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onerror = (event) => {
             if (event.error === 'aborted' || event.error === 'no-speech') {
+                isRecording = false;
+                pttBtn.classList.remove('recording');
+                document.body.classList.remove('is-recording');
+                const instructionEl = document.querySelector('.instruction');
+                if (instructionEl) instructionEl.innerText = getT().tapToTalk;
+                if (statusText && (statusText.innerText === getT().statusListening || statusText.innerText === "Escuchando...")) {
+                    statusText.innerText = getT().statusReady;
+                }
                 return;
             }
             console.error("Error de micrófono:", event.error);
@@ -640,6 +648,8 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecording = false;
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
+            const instEl = document.querySelector('.instruction');
+            if (instEl) instEl.innerText = getT().tapToTalk;
         };
 
         recognition.onend = () => {
@@ -738,7 +748,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (instructionEl) instructionEl.innerText = getT().tapToTalk;
             }
         } else {
-            // Detener grabación
+            // Detener grabación -> Respuesta Inmediata en la Interfaz (UI)
+            isRecording = false;
+            pttBtn.classList.remove('recording');
+            document.body.classList.remove('is-recording');
+            if (instructionEl) instructionEl.innerText = getT().tapToTalk;
+
+            if (statusText.innerText === getT().statusListening || statusText.innerText === "Escuchando...") {
+                statusText.innerText = "Procesando...";
+            }
+
             try {
                 recognition.stop();
             } catch (err) {
@@ -747,10 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Respaldo por si el navegador se queda atascado sin disparar onend
             setTimeout(() => {
-                if (isRecording && recognition.onend) {
+                // Forzamos el trigger de onend si finalTranscript tiene algo atorado o la interfaz sigue en procesando
+                if (recognition.onend) {
                     recognition.onend();
                 }
-            }, 1200);
+            }, 1000);
         }
     };
 
