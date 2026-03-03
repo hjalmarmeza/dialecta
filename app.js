@@ -511,23 +511,44 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.rate = 0.9;
         utterance.pitch = 1.0;
 
-        // Inyectar automáticamente la mejor voz masculina disponible para el idioma
+        // Inyectar automáticamente la MEJOR voz masculina disponible (Tier List / Prioridad)
         const voices = synth.getVoices();
         const targetLangPrefix = lang.split('-')[0];
 
-        // Palabras clave que identifican voces masculinas en diferentes motores web
-        const maleKeywords = ["Google UK English Male", "Jorge", "Alex", "Daniel", "Thomas", "Diego", "Paul", "Male", "male", "Hombre", "man", "Boy"];
+        // Diccionario ordenado de las mejores voces masculinas por idioma (Prioridad: 1.iOS Premium, 2.Google Premium, 3.Standar)
+        const premiumMaleVoices = {
+            'es': ["Jorge", "Diego", "Google español", "Pablo"],
+            'en': ["Alex", "Daniel", "Google UK English Male", "Google US English Male", "Fred", "Paul"],
+            'fr': ["Thomas", "Paul", "Google français"],
+            'de': ["Markus", "Google Deutsch"],
+            'it': ["Luca", "Google italiano"],
+            'pt': ["Tiago", "Google português do Brasil"],
+            'ja': ["Otoya", "Google 日本語", "Kyoko"],
+            'zh': ["Li-mu", "Google 普通话 (中国大陆)"]
+        };
 
-        // Buscar voz nativa masculina
-        const maleVoice = voices.find(v =>
-            v.lang.startsWith(targetLangPrefix) &&
-            maleKeywords.some(kw => v.name.includes(kw))
-        );
+        const preferredNames = premiumMaleVoices[targetLangPrefix] || ["Male", "male", "Hombre", "man", "Boy"];
+        let bestVoice = null;
 
-        if (maleVoice) {
-            utterance.voice = maleVoice;
+        // 1. Intentar encontrar una coincidencia exacta de nuestra lista VIP en orden de preferencia
+        for (const name of preferredNames) {
+            const match = voices.find(v => v.lang.startsWith(targetLangPrefix) && v.name.includes(name));
+            if (match) {
+                bestVoice = match;
+                break;
+            }
+        }
+
+        // 2. Si no encuentra ninguna de la lista VIP, buscar *cualquiera* que sepamos que es de Hombre
+        if (!bestVoice) {
+            const genericMaleKeywords = ["Male", "male", "Hombre", "man", "Boy"];
+            bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && genericMaleKeywords.some(kw => v.name.includes(kw)));
+        }
+
+        if (bestVoice) {
+            utterance.voice = bestVoice;
         } else {
-            // Si el motor web no tiene una voz de hombre clara, se usa la por defecto del sistema
+            // 3. Fallback Supremo: Si el motor web es súper básico y ni siquiera dice géneros, tomar la voz por defecto que brinde el sistema para ese idioma
             const fallbackVoice = voices.find(v => v.lang.startsWith(targetLangPrefix));
             if (fallbackVoice) utterance.voice = fallbackVoice;
         }
