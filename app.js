@@ -284,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onChildAdded(messagesRef, async (snapshot) => {
         const msg = snapshot.val();
-        const miIdioma = myLangSelect.value;
         const currentUser = usernameInput.value.trim() || getT().anon;
 
         // MÁGICA DE CONTACTOS: Si alguien envía un mensaje y no soy yo, añadirlo al panel
@@ -319,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // MOSTRAR EL MENSAJE EN PANTALLA
         if (msg.deviceId === myDeviceId) {
             // Soy yo (lo envié yo mismo)
-            // En MODO VIAJE, el teléfono traduce y "habla en voz alta" mi propio mensaje al idioma de la otra persona
+            // En MODO VIAJE, el teléfono lee dinamicamente de mis selectores
             const idiomaViaje = targetLangSelect.value;
             let traduccionViaje = msg.originalText;
 
@@ -337,17 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // Viene de un familiar (Entrante)
             statusText.innerText = getT().statusIncoming;
 
-            // Lo traducimos a NUESTRO idioma
+            // Lo traducimos a NUESTRO idioma real-time
+            const miIdiomaDynamic = myLangSelect.value;
             let traduccionParaMi = msg.originalText;
-            if (msg.originalLang.split('-')[0] !== miIdioma.split('-')[0]) {
-                traduccionParaMi = await translateText(msg.originalText, msg.originalLang, miIdioma);
+
+            if (msg.originalLang.split('-')[0] !== miIdiomaDynamic.split('-')[0]) {
+                traduccionParaMi = await translateText(msg.originalText, msg.originalLang, miIdiomaDynamic);
             }
 
-            addChatBubble(msg.senderName, msg.originalText, traduccionParaMi, false, miIdioma);
+            addChatBubble(msg.senderName, msg.originalText, traduccionParaMi, false, miIdiomaDynamic);
 
             // SOLO hablar en voz alta SI el mensaje es nuevo (evitar leer todo el historial del abuelo a la vez al recargar)
             if (!window.isInitialLoad) {
-                speakText(traduccionParaMi, miIdioma);
+                speakText(traduccionParaMi, miIdiomaDynamic);
             }
 
             statusText.innerText = getT().statusReady;
