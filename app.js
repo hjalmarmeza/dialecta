@@ -515,22 +515,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const voices = synth.getVoices();
         const targetLangPrefix = lang.split('-')[0];
 
-        // Diccionario ordenado de las mejores voces masculinas por idioma (Prioridad: 1.iOS Premium, 2.Google Premium, 3.Standar)
+        // Diccionario ordenado de las mejores voces masculinas por idioma
+        // iOS/Mac usan "Premium" o "Enhanced". Android usa Cloud Network o "Google...".
         const premiumMaleVoices = {
-            'es': ["Jorge", "Diego", "Google español", "Pablo"],
-            'en': ["Alex", "Daniel", "Google UK English Male", "Google US English Male", "Fred", "Paul"],
-            'fr': ["Thomas", "Paul", "Google français"],
-            'de': ["Markus", "Google Deutsch"],
-            'it': ["Luca", "Google italiano"],
-            'pt': ["Tiago", "Google português do Brasil"],
-            'ja': ["Otoya", "Google 日本語", "Kyoko"],
+            'es': ["Jorge Premium", "Jorge Enhanced", "Jorge", "Diego", "Google español", "Pablo"],
+            'en': ["Alex", "Daniel Premium", "Daniel Enhanced", "Daniel", "Google UK English Male", "Google US English Male", "Fred"],
+            'fr': ["Thomas Premium", "Thomas Enhanced", "Thomas", "Paul", "Google français"],
+            'de': ["Markus Premium", "Markus Enhanced", "Markus", "Google Deutsch"],
+            'it': ["Luca Premium", "Luca Enhanced", "Luca", "Google italiano"],
+            'pt': ["Tiago Premium", "Tiago Enhanced", "Tiago", "Google português do Brasil"],
+            'ja': ["Otoya Premium", "Otoya Enhanced", "Otoya", "Google 日本語"],
             'zh': ["Li-mu", "Google 普通话 (中国大陆)"]
         };
 
-        const preferredNames = premiumMaleVoices[targetLangPrefix] || ["Male", "male", "Hombre", "man", "Boy"];
+        const preferredNames = premiumMaleVoices[targetLangPrefix] || ["Premium", "Enhanced", "Male", "male", "Hombre", "man"];
         let bestVoice = null;
 
-        // 1. Intentar encontrar una coincidencia exacta de nuestra lista VIP en orden de preferencia
+        // 1. Intentar encontrar una coincidencia exacta de nuestra lista VIP garantizando máxima calidad
         for (const name of preferredNames) {
             const match = voices.find(v => v.lang.startsWith(targetLangPrefix) && v.name.includes(name));
             if (match) {
@@ -539,7 +540,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 2. Si no encuentra ninguna de la lista VIP, buscar *cualquiera* que sepamos que es de Hombre
+        // 2. Si no encuentra las VIP, buscar cualquier voz "Online", "Network" o "Cloud" que suelen ser humanas
+        if (!bestVoice) {
+            bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && (v.name.includes('Online') || v.name.includes('Network') || v.name.includes('Premium')));
+        }
+
+        // 3. Fallback a locuciones masculinas genéricas
         if (!bestVoice) {
             const genericMaleKeywords = ["Male", "male", "Hombre", "man", "Boy"];
             bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && genericMaleKeywords.some(kw => v.name.includes(kw)));
