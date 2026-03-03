@@ -456,16 +456,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 originalText: finalTranscript,
                 originalLang: miIdioma,
                 timestamp: serverTimestamp()
+            }).catch((error) => {
+                console.error("Error de Firebase:", error);
+                alert("Error de conexión. Si estás probando en tu laptop localmente, recuerda que acabamos de bloquear la llave para que solo funcione en la página oficial de GitHub Pages.");
+                statusText.innerText = getT().statusReady;
             });
 
             // Re-habilitamos estado grabando si alguien más quiere hablar
             setTimeout(() => {
-                statusText.innerText = getT().statusReady;
+                if (statusText.innerText === getT().statusSending) {
+                    statusText.innerText = getT().statusReady;
+                }
             }, 500);
         };
 
         recognition.onerror = (event) => {
-            console.error(event.error);
+            console.error("Error de micrófono:", event.error);
             statusText.innerText = 'Error al escuchar';
         };
 
@@ -473,6 +479,11 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecording = false;
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
+
+            // Si paró de grabar y nunca pasó a "Enviando", restaurar estado
+            if (statusText.innerText === getT().statusListening) {
+                statusText.innerText = getT().statusReady;
+            }
         };
     }
 
