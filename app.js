@@ -31,8 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const myLangSelect = document.getElementById('my-lang');
     const targetLangSelect = document.getElementById('target-lang');
     const swapLangBtn = document.getElementById('swap-lang-btn');
-    const voiceSelect = document.getElementById('voice-select');
-    const testVoiceBtn = document.getElementById('test-voice-btn');
     const usernameInput = document.getElementById('username');
     const chatHistory = document.getElementById('chat-history');
     const roomIdDisplay = document.getElementById('room-id-display');
@@ -216,35 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
     targetLangSelect.addEventListener('change', () => {
         localStorage.setItem('lingoTargetLang', targetLangSelect.value);
     });
-
-    voiceSelect.addEventListener('change', () => {
-        localStorage.setItem('lingoVoice', voiceSelect.value);
-    });
-
-    // Test de voz seleccionada
-    if (testVoiceBtn) {
-        testVoiceBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const baseLang = myLangSelect.value;
-            const msgs = {
-                'es-ES': 'Hola, probando 1, 2, 3. Así es como suena mi voz en español. ¿Me copias?',
-                'en-US': 'Hello, testing 1, 2, 3. This is what my voice sounds like. Do you read me?',
-                'fr-FR': 'Bonjour, test 1, 2, 3. Voici comment je sonne en français. Tu me reçois ?'
-            };
-            const textToTest = msgs[baseLang] || msgs['en-US'];
-
-            const icon = testVoiceBtn.querySelector('i');
-            icon.classList.remove('ph-play-circle');
-            icon.classList.add('ph-speaker-high');
-
-            speakText(textToTest, baseLang);
-
-            setTimeout(() => {
-                icon.classList.remove('ph-speaker-high');
-                icon.classList.add('ph-play-circle');
-            }, 3000);
-        });
-    }
 
     swapLangBtn.addEventListener('click', () => {
         // Intercambio rápido de idiomas para conversaciones de ida y vuelta
@@ -489,74 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         alert(getT().unsupported);
     }
-
-    // --- CARGADO DINÁMICO DE VOCES (Simplificado a Hombre y Mujer) --- //
-    function populateVoices() {
-        if (!synth) return;
-        const voices = synth.getVoices();
-        if (voices.length === 0) return;
-
-        const currentLangPrefix = myLangSelect.value.split('-')[0];
-
-        // Mapeo preferible para identificar qué voz es mujer y qué voz es hombre según el sistema web (Google Chrome / Safari)
-        const filters = [
-            {
-                id: "mujer",
-                label: "👩 Voz de Mujer (Google)",
-                keywords: ["Google español", "Google US English", "Google français", "Paulina", "Samantha", "Monica", "Sabina", "Amelie", "Karen", "Victoria"]
-            },
-            {
-                id: "hombre",
-                label: "👨 Voz de Hombre (Google)",
-                keywords: ["Google UK English Male", "Jorge", "Alex", "Daniel", "Thomas", "Diego", "Paul"]
-            }
-        ];
-
-        const t = getT();
-        const currentVal = voiceSelect.value;
-        const storedVal = localStorage.getItem('lingoVoice');
-
-        voiceSelect.innerHTML = `<option value="">${t.autoVoice}</option>`;
-
-        filters.forEach(filter => {
-            // Buscamos 1 voz maestra por perfil que pertenezca al idioma actual
-            const bestVoice = voices.find(v =>
-                v.lang.startsWith(currentLangPrefix) &&
-                filter.keywords.some(kw => v.name.includes(kw))
-            );
-
-            // Si la encontramos, la agregamos
-            if (bestVoice) {
-                const opt = document.createElement('option');
-                opt.value = bestVoice.voiceURI;
-                opt.textContent = filter.label;
-                voiceSelect.appendChild(opt);
-            }
-        });
-
-        // Intentar mantener la selección anterior
-        if (currentVal && Array.from(voiceSelect.options).find(o => o.value === currentVal)) {
-            voiceSelect.value = currentVal;
-        } else if (storedVal && Array.from(voiceSelect.options).find(o => o.value === storedVal)) {
-            voiceSelect.value = storedVal;
-        } else {
-            // Si el anterior no existe, forzamos seleccionar la voz de mujer por defecto
-            if (voiceSelect.options.length > 1) {
-                voiceSelect.selectedIndex = 1;
-                localStorage.setItem('lingoVoice', voiceSelect.value);
-            }
-        }
-    }
-
-    if (synth) {
-        synth.onvoiceschanged = populateVoices;
-        // Algunos navegadores cargan voces instantáneamente y nunca disparan el evento
-        populateVoices();
-        // Otros toman un poco más de tiempo, un timer de respaldo asegura que aparezcan
-        setTimeout(populateVoices, 1000);
-    }
-    // Re-pintar lista de voces de lectura cuando el idioma base cambie
-    myLangSelect.addEventListener('change', populateVoices);
     // --- 2. FUNCIÓN DE TRADUCCIÓN GRATUITA (Hack de Google Translate + Memoria) --- //
     async function translateText(text, sourceLang, targetLang) {
         if (!text) return "";
@@ -610,25 +511,25 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.rate = 0.9;
         utterance.pitch = 1.0;
 
-        // Inyectar la voz personalizada (si está definida)
+        // Inyectar automáticamente la mejor voz masculina disponible para el idioma
         const voices = synth.getVoices();
-        const selectedVoiceURI = voiceSelect.value;
         const targetLangPrefix = lang.split('-')[0];
 
-        if (selectedVoiceURI) {
-            const chosen = voices.find(v => v.voiceURI === selectedVoiceURI);
-            // SOLO inyectar si la familia de idioma coincide para evitar el Bug de Silencio Mortal en Apple/Chrome
-            if (chosen && chosen.lang.startsWith(targetLangPrefix)) {
-                utterance.voice = chosen;
-            } else {
-                // Si el mensaje está en otro idioma (ej: el otro usuario), buscamos una voz nativa genérica en el idioma correcto
-                const nativeFallback = voices.find(v => v.lang.startsWith(targetLangPrefix));
-                if (nativeFallback) utterance.voice = nativeFallback;
-            }
+        // Palabras clave que identifican voces masculinas en diferentes motores web
+        const maleKeywords = ["Google UK English Male", "Jorge", "Alex", "Daniel", "Thomas", "Diego", "Paul", "Male", "male", "Hombre", "man", "Boy"];
+
+        // Buscar voz nativa masculina
+        const maleVoice = voices.find(v =>
+            v.lang.startsWith(targetLangPrefix) &&
+            maleKeywords.some(kw => v.name.includes(kw))
+        );
+
+        if (maleVoice) {
+            utterance.voice = maleVoice;
         } else {
-            // Si por alguna razón no hay ninguna seleccionada en el menú, usar la por defecto del idioma
-            const nativeFallback = voices.find(v => v.lang.startsWith(targetLangPrefix));
-            if (nativeFallback) utterance.voice = nativeFallback;
+            // Si el motor web no tiene una voz de hombre clara, se usa la por defecto del sistema
+            const fallbackVoice = voices.find(v => v.lang.startsWith(targetLangPrefix));
+            if (fallbackVoice) utterance.voice = fallbackVoice;
         }
 
         // Efecto visual al hablar
