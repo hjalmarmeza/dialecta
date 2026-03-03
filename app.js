@@ -364,8 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.continuous = false; // Solo graba un audio a la vez, como Walkie Talkie
-        recognition.interimResults = false; // Sin resultados parciales por ahora para mayor precisión
+        recognition.continuous = true; // Graba sin parar hasta soltar el botón
+        recognition.interimResults = true; // Permite procesar resultados largos sin cortar
     } else {
         alert(getT().unsupported);
     }
@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (selectedVoiceURI) {
             const chosen = voices.find(v => v.voiceURI === selectedVoiceURI);
-            if (chosen && chosen.lang.startsWith(lang.split('-')[0])) {
+            if (chosen) { // Quité el filtro estricto para forzar aplicación de la voz elegida
                 utterance.voice = chosen;
             }
         }
@@ -503,34 +503,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         recognition.onresult = (event) => {
-            finalTranscript = event.results[0][0].transcript;
-
-            statusText.innerText = getT().statusSending;
-
-            const currentUser = usernameInput.value.trim() || getT().anon;
-            const miIdioma = myLangSelect.value;
-
-            // ENVÍO REAL A FIREBASE
-            // Esto mandará el mensaje a la nube de Google. Al recibirlo de vuelta (vía onChildAdded arriba),
-            // se mostrará automáticamente en nuestro chat local y en el de todos los rincones del mundo.
-            push(messagesRef, {
-                deviceId: myDeviceId,
-                senderName: currentUser,
-                originalText: finalTranscript,
-                originalLang: miIdioma,
-                timestamp: serverTimestamp()
-            }).catch((error) => {
-                console.error("Error de Firebase:", error);
-                alert("Error de conexión. Si estás probando en tu laptop localmente, recuerda que acabamos de bloquear la llave para que solo funcione en la página oficial de GitHub Pages.");
-                statusText.innerText = getT().statusReady;
-            });
-
-            // Re-habilitamos estado grabando si alguien más quiere hablar
-            setTimeout(() => {
-                if (statusText.innerText === getT().statusSending) {
-                    statusText.innerText = getT().statusReady;
+            // Acumular fragmentos sin enviarlos aún (se envían al soltar el botón Walkie-Talkie)
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + " ";
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
                 }
-            }, 500);
+            }
         };
 
         recognition.onerror = (event) => {
@@ -543,10 +524,41 @@ document.addEventListener('DOMContentLoaded', () => {
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
 
-            // Si paró de grabar y nunca pasó a "Enviando", restaurar estado
-            if (statusText.innerText === getT().statusListening) {
-                statusText.innerText = getT().statusReady;
+            // Combinar y limpiar texto
+            const textToSend = finalTranscript.trim();
+
+            if (textToSend) {
+                statusText.innerText = getT().statusSending;
+
+                const currentUser = usernameInput.value.trim() || getT().anon;
+                const miIdioma = myLangSelect.value;
+
+                // ENVÍO REAL A FIREBASE
+                push(messagesRef, {
+                    deviceId: myDeviceId,
+                    senderName: currentUser,
+                    originalText: textToSend,
+                    originalLang: miIdioma,
+                    timestamp: serverTimestamp()
+                }).catch((error) => {
+                    console.error("Error de Firebase:", error);
+                    alert("Error de conexión al enviar el mensaje.");
+                    statusText.innerText = getT().statusReady;
+                });
+
+                setTimeout(() => {
+                    if (statusText.innerText === getT().statusSending) {
+                        statusText.innerText = getT().statusReady;
+                    }
+                }, 1000);
+            } else {
+                // Si paró de grabar y no captó ningún texto
+                if (statusText.innerText === getT().statusListening || statusText.innerText === "Escuchando...") {
+                    statusText.innerText = getT().statusReady;
+                }
             }
+
+            finalTranscript = ''; // Limpiar siempre al terminar
         };
     }
 
@@ -564,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRecording || !recognition) return;
 
         isRecording = true;
+        finalTranscript = ''; // Reset acumulador al presionar botón
         pttBtn.classList.add('recording');
         document.body.classList.add('is-recording');
         statusText.innerText = getT().statusListening;
@@ -592,17 +605,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         }
 
-        // Respaldo por si el navegador se queda atascado (pasa en versiones antiguas de iOS/Chrome)
+        // Respaldo por si el navegador se queda atascado sin disparar onend (bug clásico de iOS/Chrome)
         setTimeout(() => {
-            if (isRecording) {
-                isRecording = false;
-                pttBtn.classList.remove('recording');
-                document.body.classList.remove('is-recording');
-                if (statusText.innerText === getT().statusListening || statusText.innerText === "Escuchando...") {
-                    statusText.innerText = getT().statusReady;
-                }
+            if (isRecording && recognition.onend) {
+                // Forzar la terminación y envío del texto bloqueado
+                recognition.onend();
             }
-        }, 1500);
+        }, 1200);
     };
 
     // Eventos PC (Mouse)
