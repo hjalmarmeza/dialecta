@@ -439,8 +439,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
-        // Podemos hacer que suene un poco más suave
-        utterance.rate = 1.0;
+
+        // Redujimos la velocidad (rate) drásticamente. 
+        // 1.0 en algunos sistemas suena como locutor de radio apresurado. 0.85 es más natural y pausado.
+        utterance.rate = 0.85;
+        // Bajar LIGERAMENTE el tono (pitch) también ayuda a que la voz suene menos robótica/aguda
+        utterance.pitch = 0.95;
 
         // Inyectar la voz personalizada (si está definida y si corresponde al idioma que estamos por hablar)
         const voices = synth.getVoices();
