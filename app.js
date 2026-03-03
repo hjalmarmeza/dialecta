@@ -681,13 +681,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         recognition.onerror = (event) => {
-            if (event.error === 'aborted') {
-                // Silenciar o manejar el aborto intencional (cuando el usuario presiona Stop/Radar rojo)
-                // No loguearlo como error
+            if (event.error === 'aborted' || event.error === 'no-speech') {
+                // Silenciar o manejar el aborto intencional y la falta de voz
                 return;
             }
             console.error("Error de micrófono:", event.error);
-            statusText.innerText = 'Error al escuchar';
+            if (statusText) statusText.innerText = 'Error al escuchar';
         };
 
         recognition.onend = () => {
