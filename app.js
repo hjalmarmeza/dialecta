@@ -41,6 +41,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const selfContactName = document.querySelector('.self-contact .contact-name');
     const selfContactLang = document.querySelector('.self-contact .contact-lang');
 
+    // Elementos del Overlay Inmersivo de Transcripción
+    const liveOverlay = document.getElementById('live-transcription-overlay');
+    const liveText1 = document.getElementById('live-text-1');
+    const liveText2 = document.getElementById('live-text-2');
+    const liveText3 = document.getElementById('live-text-3');
+    const liveLangFrom = document.getElementById('live-lang-from');
+    const liveLangTo = document.getElementById('live-lang-to');
+    const liveStopBtn = document.getElementById('live-stop-btn');
+
     // Variables de Estado
     let isRecording = false;
     let finalTranscript = '';
@@ -617,6 +626,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (recognition) {
         recognition.onstart = () => {
             statusText.innerText = getT().statusListening;
+
+            // Mostrar el Overlay Inmersivo
+            if (liveOverlay) {
+                const fromLangText = myLangSelect.options[myLangSelect.selectedIndex].text;
+                const toLangText = targetLangSelect.options[targetLangSelect.selectedIndex].text;
+                if (liveLangFrom) liveLangFrom.innerText = fromLangText;
+                if (liveLangTo) liveLangTo.innerText = toLangText;
+
+                if (liveText1) liveText1.innerText = "";
+                if (liveText2) liveText2.innerText = "...";
+                // Añadir un pequeño parpadeo de inicio
+                if (liveText3) liveText3.innerText = "Escuchando tu voz...";
+
+                liveOverlay.classList.add('active');
+            }
         };
 
         recognition.onresult = (event) => {
@@ -627,6 +651,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     finalTranscript += event.results[i][0].transcript + " ";
                 } else {
                     interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            // --- Lógica del Overlay Visual Inmersivo ---
+            if (liveOverlay && liveOverlay.classList.contains('active')) {
+                const combined = (finalTranscript + interimTranscript).trim();
+                if (combined.length > 0) {
+                    // Dividimos la frase larga en 3 bloques de cascada invertida como un prompter profesional
+                    const words = combined.split(' ');
+
+                    if (words.length <= 4) {
+                        if (liveText1) liveText1.innerText = "";
+                        if (liveText2) liveText2.innerText = "";
+                        if (liveText3) liveText3.innerText = combined;
+                    } else if (words.length <= 10) {
+                        const mid = Math.floor(words.length / 2);
+                        if (liveText1) liveText1.innerText = "";
+                        if (liveText2) liveText2.innerText = words.slice(0, mid).join(" ") + "...";
+                        if (liveText3) liveText3.innerText = words.slice(mid).join(" ");
+                    } else {
+                        const sliceSize = Math.floor(words.length / 3);
+                        if (liveText1) liveText1.innerText = words.slice(0, sliceSize).join(" ") + "...";
+                        if (liveText2) liveText2.innerText = words.slice(sliceSize, sliceSize * 2).join(" ") + "...";
+                        if (liveText3) liveText3.innerText = words.slice(sliceSize * 2).join(" ");
+                    }
                 }
             }
         };
@@ -640,6 +689,9 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecording = false;
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
+
+            // Quitar el Overlay Inmersivo
+            if (liveOverlay) liveOverlay.classList.remove('active');
 
             // Actualizar boton instruction visual text
             const instructionEl = document.querySelector('.instruction');
@@ -748,8 +800,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Usar click y touchend para la accion unica (un tap)
-    pttBtn.addEventListener('click', toggleRecording);
+    pttBtn.addEventListener('mousedown', toggleRecording);
+    pttBtn.addEventListener('touchstart', toggleRecording, { passive: false });
+
+    // Enviar instrucción de detener al botón rojo gigante del modo inmersivo
+    if (liveStopBtn) {
+        liveStopBtn.addEventListener('click', (e) => {
+            // Pasamos a detener la grabación si estaba grabando
+            if (isRecording) {
+                toggleRecording(e);
+            }
+        });
+    }
 
     // Eliminar mensaje base de bienvenida original (limpieza final)
     const initialBubbles = document.querySelectorAll('.message-bubble');

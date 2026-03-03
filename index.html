@@ -217,6 +217,59 @@
 
     </main>
 
+    <!-- OVERLAY MODO ESCUCHA INMERSIVO -->
+    <div id="live-transcription-overlay">
+        <!-- Immersive Background Light Leaks -->
+        <div class="overlay-bg-leaks">
+            <div class="overlay-leak-purple"></div>
+            <div class="overlay-leak-cyan"></div>
+        </div>
+
+        <!-- Top App Bar -->
+        <header class="overlay-header">
+            <div class="overlay-header-spacer"></div>
+            <h2 id="live-overlay-title">Dialecta</h2>
+            <div class="overlay-header-spacer"></div>
+        </header>
+
+        <!-- Main Transcription Area -->
+        <main class="overlay-main">
+            <!-- Glassmorphism Container -->
+            <div class="overlay-glass">
+                <!-- Dynamic Neon Wave Background -->
+                <div class="overlay-neon-wave"></div>
+                <!-- Text Content -->
+                <div class="overlay-content">
+                    <div class="overlay-fade-mask"></div>
+                    <div class="overlay-text-container">
+                        <p class="overlay-text-1" id="live-text-1"></p>
+                        <p class="overlay-text-2" id="live-text-2">...</p>
+                        <p class="overlay-text-3" id="live-text-3"></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Controls Area -->
+        <footer class="overlay-footer">
+            <!-- Language Translation Capsules -->
+            <div class="overlay-capsules">
+                <div class="overlay-capsule" id="live-lang-from">...</div>
+                <div class="overlay-capsule-arrow"><i class="ph-bold ph-arrow-right"></i></div>
+                <div class="overlay-capsule" id="live-lang-to">...</div>
+            </div>
+
+            <!-- Stop Recording Button -->
+            <button class="overlay-stop-btn" id="live-stop-btn" aria-label="Stop Recording">
+                <div class="overlay-stop-blur"></div>
+                <div class="overlay-stop-ring">
+                    <div class="overlay-stop-square"></div>
+                </div>
+            </button>
+        </footer>
+    </div>
+
+    <!-- Script Principal -->
     <script type="module" src="app.js"></script>
 </body>
 
