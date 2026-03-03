@@ -168,48 +168,49 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-/* --- TABS NAVIGATION --- */
-.tabs-container {
+/* --- PILL TABS NAVIGATION (Floating Segmented Control) --- */
+.pill-tabs-container {
     display: flex;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-glass);
-    border-radius: 12px;
-    margin-bottom: 20px;
-    overflow: hidden;
-    padding: 4px;
+    background: rgba(40, 40, 60, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    padding: 6px;
     gap: 4px;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 16px auto;
+    /* 16px empuja al status-text */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.tab-btn {
+.pill-tab {
     flex: 1;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 10px;
+    padding: 10px 14px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    border-radius: 8px;
+    border-radius: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
 }
 
-.tab-btn i {
-    font-size: 18px;
-}
-
-.tab-btn.active {
+.pill-tab.active {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), inset 0 0 0 1.5px rgba(99, 102, 241, 0.6);
 }
 
-.tab-btn:hover:not(.active) {
+.pill-tab:hover:not(.active) {
     background: rgba(255, 255, 255, 0.05);
+    color: white;
 }
 
 .mode-hidden {

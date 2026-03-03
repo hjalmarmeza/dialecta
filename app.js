@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabSolo = document.getElementById('tab-solo');
     const tabRoom = document.getElementById('tab-room');
     const roomInfoSection = document.getElementById('room-info-section');
-    const nameInputGroup = document.getElementById('name-input-group');
 
     // --- LÓGICA DE NAVEGACIÓN (Pestañas) --- //
     let currentMode = 'solo'; // 'solo' o 'room'
@@ -55,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tabSolo.classList.add('active');
         tabRoom.classList.remove('active');
         roomInfoSection.classList.add('mode-hidden');
-        nameInputGroup.classList.add('mode-hidden');
     });
 
     tabRoom.addEventListener('click', () => {
@@ -63,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tabRoom.classList.add('active');
         tabSolo.classList.remove('active');
         roomInfoSection.classList.remove('mode-hidden');
-        nameInputGroup.classList.remove('mode-hidden');
     });
 
     // Elementos de la Lista de Contactos (Yo mismo)
@@ -256,14 +253,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     roomIdDisplay.innerText = currentRoom;
 
-    // Lógica para visualizar los Contactos
-    contactsBtn.addEventListener('click', () => {
-        contactsPanel.classList.remove('hidden');
-    });
+    // Lógica para visualizar los Contactos (oculta o eliminada si no existen iconos)
+    if (contactsBtn) {
+        contactsBtn.addEventListener('click', () => {
+            if (contactsPanel) contactsPanel.classList.remove('hidden');
+        });
+    }
 
-    closeContactsBtn.addEventListener('click', () => {
-        contactsPanel.classList.add('hidden');
-    });
+    if (closeContactsBtn) {
+        closeContactsBtn.addEventListener('click', () => {
+            if (contactsPanel) contactsPanel.classList.add('hidden');
+        });
+    }
 
     // --- CONEXIÓN REAL CON FIREBASE (RECIBIR MENSAJES) --- //
     const messagesRef = ref(db, `rooms/${currentRoom}/messages`);
@@ -334,10 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setTimeout(() => li.style.opacity = '1', 50);
 
-                // Efecto visual de que alguien entró/habló
+                // Efecto visual de que alguien entró/habló (si existe el botón)
                 const cBtn = document.getElementById('contacts-btn');
-                cBtn.style.boxShadow = "0 0 15px #ec4899";
-                setTimeout(() => cBtn.style.boxShadow = "none", 3000);
+                if (cBtn) {
+                    cBtn.style.boxShadow = "0 0 15px #ec4899";
+                    setTimeout(() => cBtn.style.boxShadow = "none", 3000);
+                }
             }
         }
 
