@@ -58,7 +58,12 @@
                 </div>
             </div>
 
-            <div class="room-info">
+            <div class="tabs-container">
+                <button id="tab-solo" class="tab-btn active"><i class="ph ph-user"></i> En Persona</button>
+                <button id="tab-room" class="tab-btn"><i class="ph-fill ph-users-three"></i> Sala Grupal</button>
+            </div>
+
+            <div id="room-info-section" class="room-info mode-hidden">
                 <div class="room-badge">
                     <span class="status-dot"></span>
                     <span data-i18n="roomLabel">Sala:</span> <strong id="room-id-display">creando...</strong>
@@ -97,11 +102,11 @@
 
             <div class="user-config">
                 <div class="user-inputs" style="display:flex; flex-direction:column; gap:12px; flex: 1;">
-                    <div class="input-group" style="max-width: 100%;">
+                    <div id="name-input-group" class="input-group mode-hidden" style="max-width: 100%;">
                         <label for="username"><i class="ph ph-user"></i> <span data-i18n="yourName">Tu
                                 Nombre:</span></label>
                         <input type="text" id="username" class="glass-input" placeholder="Ej: Juan"
-                            data-i18n-placeholder="namePlaceholder" required>
+                            data-i18n-placeholder="namePlaceholder">
                     </div>
 
                     <div class="input-group" style="max-width: 100%;">

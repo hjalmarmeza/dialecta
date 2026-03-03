@@ -41,6 +41,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeContactsBtn = document.getElementById('close-contacts');
     const contactsPanel = document.getElementById('contacts-panel');
 
+    // Elementos de Pestañas
+    const tabSolo = document.getElementById('tab-solo');
+    const tabRoom = document.getElementById('tab-room');
+    const roomInfoSection = document.getElementById('room-info-section');
+    const nameInputGroup = document.getElementById('name-input-group');
+
+    // --- LÓGICA DE NAVEGACIÓN (Pestañas) --- //
+    let currentMode = 'solo'; // 'solo' o 'room'
+
+    tabSolo.addEventListener('click', () => {
+        currentMode = 'solo';
+        tabSolo.classList.add('active');
+        tabRoom.classList.remove('active');
+        roomInfoSection.classList.add('mode-hidden');
+        nameInputGroup.classList.add('mode-hidden');
+    });
+
+    tabRoom.addEventListener('click', () => {
+        currentMode = 'room';
+        tabRoom.classList.add('active');
+        tabSolo.classList.remove('active');
+        roomInfoSection.classList.remove('mode-hidden');
+        nameInputGroup.classList.remove('mode-hidden');
+    });
+
     // Elementos de la Lista de Contactos (Yo mismo)
     const selfContactName = document.querySelector('.self-contact .contact-name');
     const selfContactLang = document.querySelector('.self-contact .contact-lang');
@@ -753,7 +778,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Evitamos doble disparo
         if (e && e.cancelable) e.preventDefault();
 
-        if (!usernameInput.value.trim()) {
+        // En Modo Sala es obligatorio el nombre, en Modo Solo es opcional.
+        if (currentMode === 'room' && !usernameInput.value.trim()) {
             alert(getT().alertName);
             usernameInput.focus();
             return;
