@@ -33,9 +33,23 @@
 
         <!-- Cabecera / Configurador de Idiomas -->
         <header class="glass-header">
-            <div class="logo-area">
-                <i class="ph-fill ph-waves"></i>
-                <h1>Dialecta</h1>
+            <!-- Título Principal y App Lang global -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="logo-area" style="margin-bottom: 0;">
+                    <i class="ph-fill ph-waves"></i>
+                    <h1>Dialecta</h1>
+                </div>
+
+                <!-- Opciones de lenguaje de LA APP (Visual) -->
+                <div class="app-lang-selector" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <i class="ph ph-globe" style="color: var(--accent-secondary); font-size: 20px;"></i>
+                    <select id="app-lang-select" class="glass-select"
+                        style="padding: 4px 8px; font-size: 13px; height: auto;">
+                        <option value="es">ES</option>
+                        <option value="en">EN</option>
+                        <option value="fr">FR</option>
+                    </select>
+                </div>
             </div>
 
             <div class="room-info">

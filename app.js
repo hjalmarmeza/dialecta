@@ -21,6 +21,7 @@ setTimeout(() => { window.isInitialLoad = false; }, 2000); // 2 segs para ignora
 document.addEventListener('DOMContentLoaded', () => {
 
     // Referencias al DOM
+    const appLangSelect = document.getElementById('app-lang-select');
     const pttBtn = document.getElementById('ptt-button');
     const statusText = document.getElementById('status-text');
     const myLangSelect = document.getElementById('my-lang');
@@ -100,7 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function getT() {
-        const langCode = myLangSelect.value.split('-')[0];
+        // Obtenemos el idioma de la aplicación (UI) y no el hablado
+        const langCode = appLangSelect ? appLangSelect.value : 'es';
         return translations[langCode] || translations['en'];
     }
 
@@ -127,10 +129,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Aquí hacemos que la app recuerde quién es el usuario y su idioma.
     // Así los nietos se lo configuran 1 sola vez y el abuelo ya no debe tocar nada.
 
+    const savedAppLang = localStorage.getItem('dialectaAppLang');
     const savedName = localStorage.getItem('lingoName');
     const savedLang = localStorage.getItem('lingoLang');
     const savedTargetLang = localStorage.getItem('lingoTargetLang');
     const savedVoice = localStorage.getItem('lingoVoice');
+
+    if (savedAppLang && appLangSelect) {
+        appLangSelect.value = savedAppLang;
+    }
 
     if (savedName) {
         usernameInput.value = savedName;
@@ -147,6 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateUI(); // Se traduce en cuanto arranca la app
+
+    if (appLangSelect) {
+        appLangSelect.addEventListener('change', () => {
+            localStorage.setItem('dialectaAppLang', appLangSelect.value);
+            updateUI(); // Traduce la app instantáneamente
+        });
+    }
 
     // Guardar cambios automáticamente si el nieto modifica el nombre o idioma
     usernameInput.addEventListener('input', (e) => {
