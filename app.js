@@ -552,13 +552,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limpiar caché TTS interno por seguridad de sistema
         synth.cancel();
 
-        // Aplicamos el formateo y pausas sintéticas ANTES de hablar
-        // Esto le da a la voz IA el "respiro" y la entonación que requiere para sonar humana.
+        // Aplicamos el formateo sintético si por alguna razón el texto llega sin puntos ni conectores 
         let formattedText = text.replace(/ (pero|porque|aunque|entonces|además|sin embargo|y|but|because|although|then|and|mais|parce que|donc|et) /gi, ', $1 ');
-
-        // Puntuaciones obligatorias fuertes (Puntos artificiales para tomar aires profundos)
         formattedText = formattedText.replace(/ (entonces|además|por lo tanto|sin embargo|then|therefore|donc) /gi, '. $1 ');
-
         formattedText = formattedText.charAt(0).toUpperCase() + formattedText.slice(1);
         if (!/[.!?]$/.test(formattedText)) {
             formattedText += ".";
@@ -567,10 +563,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const utterance = new SpeechSynthesisUtterance(formattedText);
         utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
 
-        // Afinación conversacional lenta: 0.82 permite a la voz "respirar" y leer muy pausado
-        utterance.rate = 0.82;
-        // Bajar LIGERAMENTE el tono le da naturalidad "humana" en vez de adolescente aguda
-        utterance.pitch = 0.95;
+        // Velocidad y Tono estabilizados: 0.9 y 1.0 previenen distorsión robótica en iOS y Android
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
 
         // Inyectar la voz personalizada (si está definida)
         const voices = synth.getVoices();
@@ -687,12 +682,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Combinar y limpiar texto
             let rawText = finalTranscript.trim();
 
-            // --- TRUCO DE ENTONACIÓN SINTÉTICA ---
-            // Los motores de dictado no ponen comas. Añadimos comas artificiales antes de conectores para
-            // forzar que la voz de Robot tome "respiros" y tenga cadencia humana natural al hablar.
+            // --- TRUCO DE ENTONACIÓN Y PUNTUACIÓN VISUAL ---
+            // Los motores de dictado no ponen comas literales en dispositivos móviles. 
+            // Añadimos puntuación antes de enviar a firebase para que se vea reflejado en la pantalla.
             if (rawText) {
-                rawText = rawText.replace(/ (pero|porque|aunque|entonces|además|sin embargo|but|because|although|then|mais|parce que|donc) /gi, ', $1 ');
-                // Normalización gramatical básica para mejor acento de la IA
+                // Comas para conectores menores
+                rawText = rawText.replace(/ (pero|porque|aunque|y|but|because|although|and|mais|parce que|et) /gi, ', $1 ');
+                // Puntos para conectores mayores
+                rawText = rawText.replace(/ (entonces|además|por lo tanto|sin embargo|then|therefore|donc) /gi, '. $1 ');
+
+                // Normalización gramatical básica
                 rawText = rawText.charAt(0).toUpperCase() + rawText.slice(1);
                 if (!/[.!?]$/.test(rawText)) {
                     rawText += ".";
