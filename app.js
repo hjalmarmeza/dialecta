@@ -41,15 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selfContactName = document.querySelector('.self-contact .contact-name');
     const selfContactLang = document.querySelector('.self-contact .contact-lang');
 
-    // Elementos del Overlay Inmersivo de Transcripción
-    const liveOverlay = document.getElementById('live-transcription-overlay');
-    const liveText1 = document.getElementById('live-text-1');
-    const liveText2 = document.getElementById('live-text-2');
-    const liveText3 = document.getElementById('live-text-3');
-    const liveLangFrom = document.getElementById('live-lang-from');
-    const liveLangTo = document.getElementById('live-lang-to');
-    const liveStopBtn = document.getElementById('live-stop-btn');
-
     // Variables de Estado
     let isRecording = false;
     let finalTranscript = '';
@@ -626,21 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (recognition) {
         recognition.onstart = () => {
             statusText.innerText = getT().statusListening;
-
-            // Mostrar el Overlay Inmersivo
-            if (liveOverlay) {
-                const fromLangText = myLangSelect.options[myLangSelect.selectedIndex].text;
-                const toLangText = targetLangSelect.options[targetLangSelect.selectedIndex].text;
-                if (liveLangFrom) liveLangFrom.innerText = fromLangText;
-                if (liveLangTo) liveLangTo.innerText = toLangText;
-
-                if (liveText1) liveText1.innerText = "";
-                if (liveText2) liveText2.innerText = "...";
-                // Añadir un pequeño parpadeo de inicio
-                if (liveText3) liveText3.innerText = "Escuchando tu voz...";
-
-                liveOverlay.classList.add('active');
-            }
         };
 
         recognition.onresult = (event) => {
@@ -653,43 +629,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     interimTranscript += event.results[i][0].transcript;
                 }
             }
-
-            // --- Lógica del Overlay Visual Inmersivo ---
-            if (liveOverlay && liveOverlay.classList.contains('active')) {
-                const combined = (finalTranscript + interimTranscript).trim();
-                if (combined.length > 0) {
-                    // Dividimos la frase larga en 3 bloques de cascada invertida como un prompter profesional
-                    const words = combined.split(' ');
-
-                    if (words.length <= 4) {
-                        if (liveText1) liveText1.innerText = "";
-                        if (liveText2) liveText2.innerText = "";
-                        if (liveText3) liveText3.innerText = combined;
-                    } else if (words.length <= 10) {
-                        const mid = Math.floor(words.length / 2);
-                        if (liveText1) liveText1.innerText = "";
-                        if (liveText2) liveText2.innerText = words.slice(0, mid).join(" ") + "...";
-                        if (liveText3) liveText3.innerText = words.slice(mid).join(" ");
-                    } else {
-                        const sliceSize = Math.floor(words.length / 3);
-                        if (liveText1) liveText1.innerText = words.slice(0, sliceSize).join(" ") + "...";
-                        if (liveText2) liveText2.innerText = words.slice(sliceSize, sliceSize * 2).join(" ") + "...";
-                        if (liveText3) liveText3.innerText = words.slice(sliceSize * 2).join(" ");
-                    }
-                }
-            }
         };
 
         recognition.onerror = (event) => {
             if (event.error === 'aborted' || event.error === 'no-speech') {
-                // Silenciar o manejar el aborto intencional y la falta de voz
-                // Nos aseguramos de limpiar el UI por si onend se atora
-                if (liveOverlay) liveOverlay.classList.remove('active');
                 return;
             }
             console.error("Error de micrófono:", event.error);
             if (statusText) statusText.innerText = 'Error al escuchar';
-            if (liveOverlay) liveOverlay.classList.remove('active');
             isRecording = false;
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
@@ -699,9 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isRecording = false;
             pttBtn.classList.remove('recording');
             document.body.classList.remove('is-recording');
-
-            // Quitar el Overlay Inmersivo
-            if (liveOverlay) liveOverlay.classList.remove('active');
 
             // Actualizar boton instruction visual text
             const instructionEl = document.querySelector('.instruction');
@@ -812,16 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Usar click unificado en lugar de mousedown/touchstart para evitar doble-disparo fantasma en móviles
     pttBtn.addEventListener('click', toggleRecording);
-
-    // Enviar instrucción de detener al botón rojo gigante del modo inmersivo
-    if (liveStopBtn) {
-        liveStopBtn.addEventListener('click', (e) => {
-            // Pasamos a detener la grabación si estaba grabando
-            if (isRecording) {
-                toggleRecording(e);
-            }
-        });
-    }
 
     // Eliminar mensaje base de bienvenida original (limpieza final)
     const initialBubbles = document.querySelectorAll('.message-bubble');
