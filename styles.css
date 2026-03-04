@@ -185,8 +185,10 @@ body {
     z-index: 1;
     width: 100%;
     max-width: 480px;
-    /* Tamaño móvil / Walkie Talkie */
-    height: 100vh;
+    height: 100%;
+    /* Fallback */
+    height: 100svh;
+    /* Usar altura de vista pequeña dinámica para evitar scroll extra en iOS */
     max-height: 850px;
     display: flex;
     flex-direction: column;
@@ -632,17 +634,27 @@ body {
     position: relative;
     min-height: 0;
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    /* Esto ESENCIAL para esconder el scroll extra */
+    display: block;
 }
 
 .chat-history {
-    flex: 1;
-    width: 100%;
-    overflow-y: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: -40px;
+    /* Ensanchamos 40px fuera de la pantalla para expulsar la franja del scrollbar nativo */
+
+    overflow-y: scroll;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding: 20px;
+
+    /* El padding-right compensa totalmente los -40px y añade 20px matemáticos de espacio visual interno */
+    padding: 20px 60px 20px 20px;
+    box-sizing: border-box;
+
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -692,6 +704,8 @@ body {
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border-glass);
     animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    word-break: break-word;
+    /* Evita que el texto o los "..." se salgan de la burbuja */
 }
 
 @keyframes popIn {
