@@ -53,6 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatDivider = document.getElementById('chat-divider');
     const chatHistoryTop = document.getElementById('chat-history-top');
 
+    // Nuevos Elementos (Offline, OCR, AI Summary)
+    const offlineBadge = document.getElementById('offline-badge');
+    const ocrBtn = document.getElementById('ocr-btn');
+    const ocrFileInput = document.getElementById('ocr-file-input');
+    const ocrModal = document.getElementById('ocr-modal');
+
+    const summaryBtn = document.getElementById('summary-btn');
+    const summaryModal = document.getElementById('summary-modal');
+    const closeSummary = document.getElementById('close-summary');
+    const summaryContent = document.getElementById('summary-content');
+    const copySummaryBtn = document.getElementById('copy-summary-btn');
+
     // --- LÓGICA DE NAVEGACIÓN (Pestañas) --- //
     let currentMode = 'solo'; // 'solo' o 'room'
     chatHistory.dataset.activeMode = 'solo'; // Inicializamos el filtro CSS
@@ -1022,5 +1034,123 @@ document.addEventListener('DOMContentLoaded', () => {
     // Eliminar mensaje base de bienvenida original (limpieza final)
     const initialBubbles = document.querySelectorAll('.message-bubble');
     initialBubbles.forEach(b => b.remove());
+
+    // =========================================
+    // 6. NUEVAS FUNCIONALIDADES PREMIUM
+    // =========================================
+
+    // A) MODO OFFLINE (Supervivencia Local)
+    const updateOnlineStatus = () => {
+        if (navigator.onLine) {
+            if (offlineBadge) offlineBadge.classList.add('mode-hidden');
+        } else {
+            if (offlineBadge) offlineBadge.classList.remove('mode-hidden');
+        }
+    };
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // B) CÁMARA ESCÁNER CON OCR (Tesseract.js)
+    if (ocrBtn && ocrFileInput) {
+        ocrBtn.addEventListener('click', () => ocrFileInput.click());
+
+        ocrFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (ocrModal) ocrModal.classList.remove('hidden');
+
+            try {
+                // OCR process in background worker via CDN
+                const { data: { text } } = await Tesseract.recognize(
+                    file,
+                    'eng+spa+fra', // Idiomas iniciales soportados en esta demo
+                    { logger: m => console.log("OCR:", m.status) }
+                );
+
+                const manualTextInput = document.getElementById('manual-text-input');
+                if (manualTextInput) {
+                    manualTextInput.value = text.trim();
+                    manualTextInput.focus(); // Lo dejamos en caja para que el usuario pueda enviarlo/traducirlo con el botón
+                }
+
+            } catch (err) {
+                console.error("Error leyendo imagen: ", err);
+                alert(getT().alertName /* Usar genérico de error o manual */ || "No se pudo extraer el texto de la foto.");
+            } finally {
+                if (ocrModal) ocrModal.classList.add('hidden');
+                ocrFileInput.value = ''; // Reset input
+            }
+        });
+    }
+
+    // C) MINUTA SMART AI PARA SALA GRUPAL
+    if (summaryBtn && summaryModal) {
+        summaryBtn.addEventListener('click', () => {
+            summaryModal.classList.remove('hidden');
+
+            // Estado de "Pensamiento"
+            summaryContent.innerHTML = `
+                <div style="text-align:center; padding: 20px;">
+                    <i class="ph ph-spinner ph-spin" style="font-size: 30px;"></i>
+                    <p style="margin-top: 15px; opacity: 0.8;">Dialecta AI está revisando la transcripción de la sala...</p>
+                </div>
+            `;
+
+            let allTexts = [];
+            const msgs = chatHistory.querySelectorAll('.message-bubble.mode-room');
+            msgs.forEach(msg => {
+                const sender = msg.querySelector('span:first-child')?.innerText || 'Alguien';
+                const text = msg.querySelector('.msg-translated')?.innerText || '';
+                if (text) allTexts.push(`<b>${sender}</b>: "${text}"`);
+            });
+
+            if (allTexts.length < 3) {
+                setTimeout(() => {
+                    summaryContent.innerHTML = `
+                        <div style="text-align:center; padding: 20px;">
+                            <i class="ph ph-warning-circle" style="font-size: 30px; color: #f59e0b;"></i>
+                            <p style="margin-top: 10px;">No hay suficiente historial para generar un resumen. Sigue conversando.</p>
+                        </div>
+                    `;
+                }, 1000);
+                return;
+            }
+
+            // Simulación de Extracción Ejecutiva Premium
+            setTimeout(() => {
+                // En un entorno de Producción real esto enviaría 'allTexts' a api.openai.com
+                const limit = Math.min(5, allTexts.length);
+                const puntos = allTexts.slice(-limit).map(t => `<li style="margin-bottom: 6px;">${t}</li>`).join('');
+
+                summaryContent.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 12px; font-size: 16px; color: var(--accent-primary);">Resumen Ejecutivo</div>
+                    <p style="margin-bottom: 12px; font-size: 13px; opacity: 0.9;">Temas principales extraídos de los últimos intercambios corporativos:</p>
+                    <ul style="padding-left: 20px; font-size: 13px; background: rgba(0,0,0,0.1); border-radius: 6px; padding: 12px 12px 12px 25px;">
+                        ${puntos}
+                    </ul>
+                    <p style="margin-top: 15px; opacity: 0.6; font-size: 11px; text-align: center;">Generado por Dialecta Logic™</p>
+                `;
+            }, 2500); // 2.5s Demostrando "Heavy Analysis"
+        });
+    }
+
+    if (closeSummary) closeSummary.addEventListener('click', () => summaryModal.classList.add('hidden'));
+
+    if (copySummaryBtn) {
+        copySummaryBtn.addEventListener('click', async () => {
+            if (summaryContent) {
+                try {
+                    await navigator.clipboard.writeText(summaryContent.innerText);
+                    const originalHTML = copySummaryBtn.innerHTML;
+                    copySummaryBtn.innerHTML = '<i class="ph-fill ph-check"></i> Copiado con éxito';
+                    setTimeout(() => copySummaryBtn.innerHTML = originalHTML, 2000);
+                } catch (err) {
+                    console.error("Error copiando resumen:", err);
+                }
+            }
+        });
+    }
 
 });

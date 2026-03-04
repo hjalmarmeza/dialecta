@@ -1308,3 +1308,62 @@ body.is-recording .status-indicator {
 .chat-history[data-active-mode="room"] .message-bubble.mode-solo {
     display: none !important;
 }
+
+/* =========================================
+   NUEVAS FUNCIONES (OFFLINE, OCR, IA)
+   ========================================= */
+
+.offline-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.offline-badge.mode-hidden {
+    display: none !important;
+}
+
+.ocr-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ocr-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: -4px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ocr-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.ocr-btn i {
+    font-size: 18px;
+}
+
+@media (max-width: 400px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}

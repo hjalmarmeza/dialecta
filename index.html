@@ -22,6 +22,8 @@
         rel="stylesheet">
     <!-- Íconos (Phosphor Icons - muy premium) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- OCR Engine -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -45,6 +47,9 @@
                     <img src="icon.png" alt="Dialecta Logo"
                         style="width: 24px; height: 24px; border-radius: 6px; object-fit: contain;">
                     <h1>Dialecta</h1>
+                    <div id="offline-badge" class="offline-badge mode-hidden">
+                        <i class="ph-fill ph-wifi-slash"></i> <span>Local</span>
+                    </div>
                 </div>
 
                 <!-- Opciones de lenguaje de LA APP (Visual) -->
@@ -90,6 +95,12 @@
                         style="height: 34px; padding: 0 12px; flex-shrink: 0; background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(236, 72, 153, 0.4));">
                         <i class="ph ph-share-network"></i> <span data-i18n="inviteBtn">Invitar</span>
                     </button>
+
+                    <button id="summary-btn" class="glass-btn-small"
+                        style="height: 34px; padding: 0 12px; flex-shrink: 0; background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.4));"
+                        title="Resumir Sala">
+                        <i class="ph-fill ph-magic-wand"></i> <span class="hide-mobile">Resumir</span>
+                    </button>
                 </div>
             </div>
 
@@ -127,6 +138,14 @@
         <!-- Campo Discreto Manual (Floating Action Input) -->
         <div class="manual-input-wrapper">
             <form id="manual-input-form" class="manual-input-form">
+                <!-- Botón de Cámara Oculto (OCR) -->
+                <div class="ocr-wrapper">
+                    <input type="file" id="ocr-file-input" accept="image/*" capture="environment"
+                        style="display: none;">
+                    <button type="button" id="ocr-btn" class="glass-btn-small ocr-btn" title="Traducir con Cámara">
+                        <i class="ph ph-camera"></i>
+                    </button>
+                </div>
                 <input type="text" id="manual-text-input" class="glass-input manual-input-field"
                     placeholder="Escribe aquí..." data-i18n-placeholder="typeToTranslate" autocomplete="off">
                 <button type="submit" id="manual-send-btn" class="glass-btn-small manual-send-btn">
@@ -223,6 +242,38 @@
                         <i class="ph-fill ph-copy"></i> <span data-i18n="copyLink">Copiar Link</span>
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal OCR Loading -->
+        <div id="ocr-modal" class="share-modal hidden">
+            <div class="share-content" style="text-align: center; padding: 30px;">
+                <i class="ph-fill ph-scan"
+                    style="font-size: 40px; color: var(--accent-primary); animation: pulse 1.5s infinite;"></i>
+                <h3 style="margin: 15px 0 5px 0;">Escaneando Texto...</h3>
+                <p style="font-size: 13px; opacity: 0.7;">Identificando idioma de la imagen</p>
+            </div>
+        </div>
+
+        <!-- Modal Resumen AI -->
+        <div id="summary-modal" class="share-modal hidden">
+            <div class="share-content" style="max-height: 80vh; display: flex; flex-direction: column;">
+                <div class="share-header">
+                    <h3><i class="ph-fill ph-magic-wand" style="color: var(--accent-primary);"></i> Minuta Inteligente
+                    </h3>
+                    <button id="close-summary" class="close-btn"><i class="ph ph-x"></i></button>
+                </div>
+                <div id="summary-content" class="summary-content"
+                    style="flex: 1; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--text-primary);">
+                    <!-- Contenido Generado -->
+                    <div style="text-align:center; padding: 20px;">
+                        <i class="ph ph-spinner ph-spin" style="font-size: 30px;"></i>
+                        <p>Analizando la conversación...</p>
+                    </div>
+                </div>
+                <button class="share-btn whatsapp" id="copy-summary-btn" style="margin-top: 15px;">
+                    <i class="ph-fill ph-copy"></i> Copiar Resumen
+                </button>
             </div>
         </div>
 
