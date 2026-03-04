@@ -48,12 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DE NAVEGACIÓN (Pestañas) --- //
     let currentMode = 'solo'; // 'solo' o 'room'
+    chatHistory.dataset.activeMode = 'solo'; // Inicializamos el filtro CSS
 
     tabSolo.addEventListener('click', () => {
         currentMode = 'solo';
         tabSolo.classList.add('active');
         tabRoom.classList.remove('active');
         roomInfoSection.classList.add('mode-hidden');
+        chatHistory.dataset.activeMode = 'solo';
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll al cambiar
     });
 
     tabRoom.addEventListener('click', () => {
@@ -61,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         tabRoom.classList.add('active');
         tabSolo.classList.remove('active');
         roomInfoSection.classList.remove('mode-hidden');
+        chatHistory.dataset.activeMode = 'room';
+        chatHistory.scrollTop = chatHistory.scrollHeight;
     });
 
     // Elementos de la Lista de Contactos (Yo mismo)
@@ -358,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 traduccionViaje = await translateText(msg.originalText, msg.originalLang, idiomaViaje);
             }
 
-            addChatBubble(currentUser, msg.originalText, traduccionViaje, true, idiomaViaje);
+            addChatBubble(currentUser, msg.originalText, traduccionViaje, true, idiomaViaje, 'room');
 
             // Hablamos en voz alta la traducción en nuestro propio celular (Para la persona de en frente)
             if (!window.isInitialLoad) {
@@ -376,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 traduccionParaMi = await translateText(msg.originalText, msg.originalLang, miIdiomaDynamic);
             }
 
-            addChatBubble(msg.senderName, msg.originalText, traduccionParaMi, false, miIdiomaDynamic);
+            addChatBubble(msg.senderName, msg.originalText, traduccionParaMi, false, miIdiomaDynamic, 'room');
 
             // SOLO hablar en voz alta SI el mensaje es nuevo (evitar leer todo el historial del abuelo a la vez al recargar)
             if (!window.isInitialLoad) {
@@ -591,9 +596,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. FUNCIÓN PARA CREAR BURBUJAS DE CHAT EN LA PANTALLA --- //
-    function addChatBubble(senderName, originalText, translatedText, isOutgoing, langToSpeak) {
+    function addChatBubble(senderName, originalText, translatedText, isOutgoing, langToSpeak, modeCategory = 'room') {
         const bubble = document.createElement('div');
-        bubble.className = `message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        // Agregamos la clase mode-solo o mode-room para permitir estilos CSS dinámicos de filtrado de Pestañas
+        bubble.className = `message-bubble mode-${modeCategory} ${isOutgoing ? 'outgoing' : 'incoming'}`;
 
         const now = new Date();
         const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -719,15 +725,38 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- 5.5 FUNCIÓN GENERAL DE ENVÍO A FIREBASE (Voz y Texto) --- //
-    function sendMessageToFirebase(textToSend) {
-        if (textToSend) {
-            statusText.innerText = getT().statusSending;
+    // --- 5.5 FUNCIÓN GENERAL DE MANEJO DE MENSAJES --- //
+    async function sendMessageToFirebase(textToSend) {
+        if (!textToSend) {
+            if (statusText) statusText.innerText = getT().statusReady;
+            return;
+        }
 
-            const currentUser = usernameInput.value.trim() || getT().anon;
-            const miIdioma = myLangSelect.value;
+        statusText.innerText = getT().statusSending;
 
-            // ENVÍO REAL A FIREBASE
+        const currentUser = usernameInput.value.trim() || getT().anon;
+        const miIdioma = myLangSelect.value;
+
+        if (currentMode === 'solo') {
+            // MODO "EN PERSONA": Procesamiento puramente local, NO Firebase, máxima velocidad y voz aislada
+            const targetLang = targetLangSelect.value;
+            let traduccion = textToSend;
+
+            if (miIdioma.split('-')[0] !== targetLang.split('-')[0]) {
+                traduccion = await translateText(textToSend, miIdioma, targetLang);
+            }
+
+            addChatBubble(getT().youMsg, textToSend, traduccion, true, targetLang, 'solo');
+
+            // Garantizar TTS invocando directo post-traducción en la misma cadena local
+            setTimeout(() => {
+                speakText(traduccion, targetLang);
+            }, 60);
+
+            if (statusText) statusText.innerText = getT().statusReady;
+
+        } else {
+            // MODO "SALA GRUPAL": ENVÍO REAL A FIREBASE
             push(messagesRef, {
                 deviceId: myDeviceId,
                 senderName: currentUser,
@@ -743,8 +772,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (statusText) statusText.innerText = getT().statusReady;
                 }, 1200);
             });
-        } else {
-            if (statusText) statusText.innerText = getT().statusReady;
         }
     }
 

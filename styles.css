@@ -1059,3 +1059,14 @@ body.is-recording .status-indicator {
     transform: scale(0.92);
     background: #4338ca;
 }
+
+/* =========================================
+   FILTRO DE PESTAÑAS DINÁMICO
+   ========================================= */
+.chat-history[data-active-mode="solo"] .message-bubble.mode-room {
+    display: none !important;
+}
+
+.chat-history[data-active-mode="room"] .message-bubble.mode-solo {
+    display: none !important;
+}
