@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variables de Estado
     let isRecording = false;
     let finalTranscript = '';
+    let isLockedMode = false;
 
     // --- I18N (INTERNACIONALIZACIÓN DE LA INTERFAZ) --- //
     const translations = {
@@ -697,21 +698,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 5. EVENTOS DEL RECONOCIMIENTO DE VOZ --- //
+    let silenceTimer = null;
+    const SILENCE_TIMEOUT = 10000; // 10 segundos de silencio apagan la app.
+
+    const resetSilenceTimer = () => {
+        if (silenceTimer) clearTimeout(silenceTimer);
+        // Sólo aplicar el Eco-Mode si estamos en modo contínuo (Swipe-Up)
+        if (isLockedMode) {
+            silenceTimer = setTimeout(() => {
+                if (isLockedMode && isRecording) {
+                    if (statusText) {
+                        statusText.innerText = "Eco-Mode: Pausado por Inactividad";
+                        statusText.style.color = "#f59e0b"; // Naranja indicativo
+                        setTimeout(() => statusText.style.color = "", 4000);
+                    }
+                    stopRecordingSession(); // Cortar de raíz el vampiro 2
+                }
+            }, SILENCE_TIMEOUT);
+        }
+    };
+
     if (recognition) {
         recognition.onstart = () => {
             statusText.innerText = getT().statusListening;
+            resetSilenceTimer();
         };
 
         recognition.onresult = (event) => {
+            resetSilenceTimer(); // El usuario habló, reseteamos el reloj
             // Acumular fragmentos sin enviarlos aún (se envían al soltar el botón Walkie-Talkie)
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript + " ";
                 }
             }
-            // FEEDBACK VISUAL EN TIEMPO REAL DESACTIVADO
-            // Ya no mostramos el texto mientras se habla. 
-            // La pantalla simplemente dirá "Escuchando..." para dar una sensación más fluida al usuario.
         };
 
         recognition.onerror = (event) => {
@@ -867,7 +887,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const instructionEl = document.querySelector('.instruction');
     const lockIndicator = document.getElementById('lock-indicator');
     let touchStartY = 0;
-    let isLockedMode = false;
     let isSwiping = false;
 
     const startRecordingSession = () => {
@@ -912,10 +931,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const stopVisualRecording = () => {
+        if (silenceTimer) clearTimeout(silenceTimer);
         isRecording = false;
         isLockedMode = false;
         pttBtn.classList.remove('recording', 'locked');
         document.body.classList.remove('is-recording');
+        if (lockIndicator) lockIndicator.classList.remove('active', 'visible');
         if (instructionEl) instructionEl.innerText = getT().tapToTalk;
     };
 
@@ -989,6 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deltaY > 40) {
             isLockedMode = true;
             isSwiping = false;
+            resetSilenceTimer();
 
             // Feedback Visual de que lograste el LOCK (magenta style)
             pttBtn.classList.remove('recording');
