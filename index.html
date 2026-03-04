@@ -60,6 +60,12 @@
                         </select>
                     </div>
 
+                    <button id="split-screen-btn" class="glass-btn-small"
+                        style="background: rgba(255,255,255,0.05); padding: 4px 8px;"
+                        title="Modo Diálogo (Pantalla Dividida)">
+                        <i class="ph ph-columns" style="font-size: 16px; transform: rotate(90deg);"></i>
+                    </button>
+
                     <button id="clear-local-btn" class="glass-btn-small"
                         style="background: rgba(255,255,255,0.05); padding: 4px 8px;"
                         title="Limpiar mis mensajes de pantalla">
@@ -89,15 +95,33 @@
 
         </header>
 
-        <!-- Historial de Conversación -->
-        <div class="chat-history-clip">
-            <section class="chat-history" id="chat-history">
-                <div class="system-message">
-                    <i class="ph ph-shield-check"></i>
-                    <span data-i18n="safeRoomDesc">Sala segura. Elige los idiomas y toca el botón para hablar o
-                        detenerte.</span>
-                </div>
-            </section>
+        <!-- Envoltorio para permitir Pantalla Dividida -->
+        <div class="chat-container-wrapper">
+
+            <!-- Mitad Superior (Modo Split / Rotada 180deg para el interlocutor) -->
+            <div class="chat-history-clip top-half mode-hidden" id="chat-history-clip-top">
+                <section class="chat-history" id="chat-history-top">
+                    <!-- Aquí se clonarán los mensajes -->
+                </section>
+            </div>
+
+            <!-- Divisor Central con Botón para Cerrar -->
+            <div class="chat-divider mode-hidden" id="chat-divider">
+                <button class="close-split-btn" id="close-split-btn" title="Cerrar Modo Diálogo">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Historial de Conversación Principal (Mitad Inferior) -->
+            <div class="chat-history-clip" id="chat-history-clip-main">
+                <section class="chat-history" id="chat-history">
+                    <div class="system-message">
+                        <i class="ph ph-shield-check"></i>
+                        <span data-i18n="safeRoomDesc">Sala segura. Elige los idiomas y toca el botón para hablar o
+                            detenerte.</span>
+                    </div>
+                </section>
+            </div>
         </div>
 
         <!-- Campo Discreto Manual (Floating Action Input) -->

@@ -46,9 +46,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabRoom = document.getElementById('tab-room');
     const roomInfoSection = document.getElementById('room-info-section');
 
+    // Nodos de Pantalla Dividida (Split Screen)
+    const splitScreenBtn = document.getElementById('split-screen-btn');
+    const closeSplitBtn = document.getElementById('close-split-btn');
+    const chatHistoryClipTop = document.getElementById('chat-history-clip-top');
+    const chatDivider = document.getElementById('chat-divider');
+    const chatHistoryTop = document.getElementById('chat-history-top');
+
     // --- LÓGICA DE NAVEGACIÓN (Pestañas) --- //
     let currentMode = 'solo'; // 'solo' o 'room'
     chatHistory.dataset.activeMode = 'solo'; // Inicializamos el filtro CSS
+
+    // Lógica interna de Pantalla Dividida
+    let splitModeActive = false;
+
+    const enableSplitScreen = () => {
+        splitModeActive = true;
+        chatHistoryClipTop.classList.remove('mode-hidden');
+        chatDivider.classList.remove('mode-hidden');
+        if (chatHistoryTop) chatHistoryTop.scrollTop = chatHistoryTop.scrollHeight; // Auto-scroll
+    };
+
+    const disableSplitScreen = () => {
+        splitModeActive = false;
+        chatHistoryClipTop.classList.add('mode-hidden');
+        chatDivider.classList.add('mode-hidden');
+    };
+
+    if (splitScreenBtn) splitScreenBtn.addEventListener('click', enableSplitScreen);
+    if (closeSplitBtn) closeSplitBtn.addEventListener('click', disableSplitScreen);
 
     tabSolo.addEventListener('click', () => {
         currentMode = 'solo';
@@ -57,6 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
         roomInfoSection.classList.add('mode-hidden');
         chatHistory.dataset.activeMode = 'solo';
         chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll al cambiar
+
+        // Mostrar botón de Pantalla Dividida en modo Solo
+        if (splitScreenBtn) splitScreenBtn.classList.remove('mode-hidden');
     });
 
     tabRoom.addEventListener('click', () => {
@@ -66,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
         roomInfoSection.classList.remove('mode-hidden');
         chatHistory.dataset.activeMode = 'room';
         chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Ocultar y Desactivar Pantalla Dividida en modo Sala
+        if (splitScreenBtn) splitScreenBtn.classList.add('mode-hidden');
+        disableSplitScreen();
     });
 
     // Elementos de la Lista de Contactos (Yo mismo)
@@ -606,41 +639,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. FUNCIÓN PARA CREAR BURBUJAS DE CHAT EN LA PANTALLA --- //
     function addChatBubble(senderName, originalText, translatedText, isOutgoing, langToSpeak, modeCategory = 'room') {
-        const bubble = document.createElement('div');
-        // Agregamos la clase mode-solo o mode-room para permitir estilos CSS dinámicos de filtrado de Pestañas
-        bubble.className = `message-bubble mode-${modeCategory} ${isOutgoing ? 'outgoing' : 'incoming'}`;
+        const createBubbleElement = () => {
+            const bubble = document.createElement('div');
+            bubble.className = `message-bubble mode-${modeCategory} ${isOutgoing ? 'outgoing' : 'incoming'}`;
 
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        bubble.innerHTML = `
-            <div style="font-size: 11px; margin-bottom: 4px; opacity: 0.7; font-weight: bold; color: ${isOutgoing ? 'var(--text-translated)' : 'var(--accent-secondary)'}; display: flex; justify-content: space-between; align-items: center;">
-                <span>${isOutgoing ? getT().youMsg : senderName}</span>
-                <span class="msg-time" style="font-size: 9px; opacity: 0.6; font-weight: normal;">${timeString}</span>
-            </div>
-            <div class="msg-original">${originalText}</div>
-            <div class="msg-translated">${translatedText}</div>
-            <button class="play-btn" aria-label="Reproducir traducción"><i class="ph-fill ph-play-circle"></i></button>
-        `;
+            bubble.innerHTML = `
+                <div style="font-size: 11px; margin-bottom: 4px; opacity: 0.7; font-weight: bold; color: ${isOutgoing ? 'var(--text-translated)' : 'var(--accent-secondary)'}; display: flex; justify-content: space-between; align-items: center;">
+                    <span>${isOutgoing ? getT().youMsg : senderName}</span>
+                    <span class="msg-time" style="font-size: 9px; opacity: 0.6; font-weight: normal;">${timeString}</span>
+                </div>
+                <div class="msg-original">${originalText}</div>
+                <div class="msg-translated">${translatedText}</div>
+                <button class="play-btn" aria-label="Reproducir traducción"><i class="ph-fill ph-play-circle"></i></button>
+            `;
 
-        // Añadir evento al botón de play
-        const btn = bubble.querySelector('.play-btn');
-        btn.addEventListener('click', () => {
-            const icon = btn.querySelector('i');
-            icon.classList.remove('ph-play-circle');
-            icon.classList.add('ph-speaker-high');
+            const btn = bubble.querySelector('.play-btn');
+            btn.addEventListener('click', () => {
+                const icon = btn.querySelector('i');
+                icon.classList.remove('ph-play-circle');
+                icon.classList.add('ph-speaker-high');
 
-            speakText(translatedText, langToSpeak);
+                speakText(translatedText, langToSpeak);
 
-            // Volver a icono original (aprox 2 segundos por simplicidad)
-            setTimeout(() => {
-                icon.classList.remove('ph-speaker-high');
-                icon.classList.add('ph-play-circle');
-            }, 2000);
-        });
+                setTimeout(() => {
+                    icon.classList.remove('ph-speaker-high');
+                    icon.classList.add('ph-play-circle');
+                }, 2000);
+            });
+            return bubble;
+        };
 
-        chatHistory.appendChild(bubble);
+        const bubbleMain = createBubbleElement();
+        chatHistory.appendChild(bubbleMain);
         chatHistory.scrollTop = chatHistory.scrollHeight; // Auto-scroll abajo
+
+        // Sincronizar espejo para pantalla dividida
+        if (chatHistoryTop) {
+            const bubbleClone = createBubbleElement();
+            chatHistoryTop.appendChild(bubbleClone);
+            chatHistoryTop.scrollTop = chatHistoryTop.scrollHeight;
+        }
     }
 
     // --- 5. EVENTOS DEL RECONOCIMIENTO DE VOZ --- //

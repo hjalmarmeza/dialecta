@@ -626,8 +626,69 @@ body {
 }
 
 /* =========================================
-   HISTORIAL DE CHAT - SIN SCROLLBAR VISIBLE
+   HISTORIAL DE CHAT - SIN SCROLLBAR VISIBLE Y PANTALLA DIVIDIDA
    ========================================= */
+
+.chat-container-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-divider.mode-hidden {
+    display: none !important;
+}
+
+.close-split-btn {
+    background: rgba(20, 20, 30, 0.9);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 20;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s;
+    outline: none;
+    padding: 0;
+}
+
+.close-split-btn i {
+    font-size: 16px;
+}
+
+.close-split-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+    transform: scale(1.1);
+}
+
+.top-half {
+    transform: rotate(180deg);
+}
+
+.top-half.mode-hidden {
+    display: none !important;
+}
 
 .chat-history-clip {
     flex: 1;
