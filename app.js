@@ -733,13 +733,20 @@ document.addEventListener('DOMContentLoaded', () => {
             let tempFinal = '';
             let tempInterim = '';
 
-            // Reconstruimos SIEMPRE la frase entera desde el array de la sesión activa
-            // Esto neutraliza un bug severo de Android Chrome donde se re-envían strings completos sumados.
+            // Reconstruimos SIEMPRE la frase final
             for (let i = 0; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     tempFinal += event.results[i][0].transcript + " ";
-                } else {
-                    tempInterim += event.results[i][0].transcript + " ";
+                }
+            }
+
+            // Android Chrome Bug Fix (Cumulative Transcript):
+            // Solo tomamos el ÚLTIMO borrador de todos los resultados emitidos si no es final,
+            // en lugar de sumarlos todos, para neutralizar el efecto bola de nieve en Android.
+            if (event.results.length > 0) {
+                const lastResult = event.results[event.results.length - 1];
+                if (!lastResult.isFinal) {
+                    tempInterim = lastResult[0].transcript;
                 }
             }
 
