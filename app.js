@@ -685,16 +685,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         recognition.onend = () => {
-            // SI SIGUE GRABANDO (Es decir, el usuario NO fue quien presionó el botón para detener)
-            // Significa que Chrome/Safari cortó el micro por "silencio prolongado". 
+            // SI SIGUE GRABANDO (El usuario NO ha presionado Stop todavía)
+            // Significa que el navegador cortó el micro por "silencio prolongado" o por ser iOS (continuous=false)
             if (isRecording) {
-                try {
-                    recognition.start();
-                    return; // Si el reinicio es exitoso, cortamos la función para no detener la UI
-                } catch (e) {
-                    console.log("No se pudo auto-reiniciar", e);
-                    // Si el auto-reinicio falla (típico en iOS Safari sin gesto del usuario), dejamos caer al flujo normal para resetear la UI obligatoriamente.
-                }
+                // En iOS/Safari, recognition.start() después de onend necesita un pequeño delay
+                // para que el motor cierre el ciclo anterior antes de abrir uno nuevo.
+                setTimeout(() => {
+                    if (isRecording) { // Verificar de nuevo por si el usuario paró mientras esperábamos
+                        try {
+                            recognition.start();
+                            return;
+                        } catch (e) {
+                            // Si falla (ej. el usuario revocó el permiso), dejamos caer al flujo de reset
+                            console.log("No se pudo auto-reiniciar:", e.name, e.message);
+                        }
+                    }
+                }, 100);
+                return; // Salimos aquí para no ejecutar el procesamiento de texto todavía
             }
 
             isRecording = false;
@@ -846,41 +853,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
             recognition.lang = myLangSelect.value;
 
-            // En iOS/Safari el mic necesita un warm-up con getUserMedia primero
-            // para que SpeechRecognition pueda acceder al hardware del micrófono.
-            const startRecognition = () => {
-                try {
-                    recognition.start();
-                } catch (err) {
+            // CRÍTICO iOS: recognition.start() DEBE llamarse sincrónicamente
+            // dentro del event handler del usuario. Cualquier llamada asíncrona
+            // (getUserMedia, .then(), await) antes de start() rompe el permiso en iOS Safari.
+            try {
+                recognition.start();
+            } catch (err) {
+                // InvalidStateError significa que ya estaba iniciado, se ignora.
+                if (err.name !== 'InvalidStateError') {
                     console.error("No se pudo iniciar reconocimiento:", err);
-                    // Si ya estaba iniciado (InvalidStateError), ignoramos este error
-                    if (err.name !== 'InvalidStateError') {
-                        statusText.innerText = "Error: micrófono ocupado";
-                        isRecording = false;
-                        pttBtn.classList.remove('recording');
-                        document.body.classList.remove('is-recording');
-                        if (instructionEl) instructionEl.innerText = getT().tapToTalk;
-                    }
+                    statusText.innerText = "Error: micrófono ocupado";
+                    isRecording = false;
+                    pttBtn.classList.remove('recording');
+                    document.body.classList.remove('is-recording');
+                    if (instructionEl) instructionEl.innerText = getT().tapToTalk;
                 }
-            };
-
-            if (isMobileSafari && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then((stream) => {
-                        // Cerramos el stream de warm-up inmediatamente (SpeechRecognition maneja el suyo)
-                        stream.getTracks().forEach(track => track.stop());
-                        startRecognition();
-                    })
-                    .catch((err) => {
-                        console.error("Permiso de micrófono denegado:", err);
-                        statusText.innerText = "Permiso denegado";
-                        isRecording = false;
-                        pttBtn.classList.remove('recording');
-                        document.body.classList.remove('is-recording');
-                        if (instructionEl) instructionEl.innerText = getT().tapToTalk;
-                    });
-            } else {
-                startRecognition();
             }
         } else {
             // Detener grabación -> Respuesta Inmediata en la Interfaz (UI)

@@ -29,7 +29,22 @@
 /* =========================================
    RESET & BASE
    ========================================= */
-html,
+html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -38,9 +53,13 @@ body {
     overflow: hidden !important;
     overscroll-behavior: none;
     /* Evitar rubber-banding en Safari */
-    /* Ocultar scrollbars globales */
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
+}
+
+body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
 }
 
 * {
@@ -48,10 +67,8 @@ body {
     /* Ocultar barras de scroll globalmente en todo el DOM */
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
-    /* Evitar los 3 puntos diagonales de Safari/Chrome (Resizer Handle) */
+    /* Evitar el resize handle de Safari/Chrome */
     resize: none !important;
-    /* Forzar estilo limpio en WebKit */
-    -webkit-overflow-scrolling: touch;
 }
 
 /* Ocultar COMPLETAMENTE el resizer/corner nativo en TODOS los elementos */
@@ -610,20 +627,28 @@ body {
    ========================================= */
 .chat-history {
     flex: 1;
-    overflow-y: auto;
+    /* Truco definitivo para ocultar el scrollbar nativo en iOS Safari:
+       El margen negativo empuja el scrollbar fuera del área visible del contenedor,
+       y el overflow:hidden del .app-container lo oculta completamente. */
+    overflow-y: scroll;
     overflow-x: hidden;
-    padding: 20px;
+    padding: 20px 20px 20px 20px;
+    /* Empujamos el scrollbar nativo de iOS a la derecha fuera del clip */
+    margin-right: -20px;
+    padding-right: 40px;
     display: flex;
     flex-direction: column;
     gap: 16px;
 
-    /* Scrollbar invisible para look limpio */
+    /* Capas adicionales de ocultación para todos los navegadores */
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     resize: none !important;
 }
 
 .chat-history::-webkit-scrollbar,
+.chat-history::-webkit-scrollbar-thumb,
+.chat-history::-webkit-scrollbar-track,
 .chat-history::-webkit-resizer,
 .chat-history::-webkit-scrollbar-corner {
     width: 0 !important;
@@ -632,6 +657,7 @@ body {
     background: transparent !important;
     visibility: hidden !important;
     -webkit-appearance: none !important;
+    opacity: 0 !important;
 }
 
 .system-message {
