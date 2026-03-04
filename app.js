@@ -651,22 +651,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onresult = (event) => {
             // Acumular fragmentos sin enviarlos aún (se envían al soltar el botón Walkie-Talkie)
-            let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript + " ";
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-
-            // FEEDBACK VISUAL EN TIEMPO REAL: Mostrar transcripción en curso en el statusText
-            if (statusText) {
-                let currentText = (finalTranscript + interimTranscript).trim();
-                // Limitar longitud visible si es muy larga
-                if (currentText.length > 50) currentText = "..." + currentText.slice(-50);
-                if (currentText) statusText.innerText = currentText;
-            }
+            // FEEDBACK VISUAL EN TIEMPO REAL DESACTIVADO
+            // Ya no mostramos el texto mientras se habla. 
+            // La pantalla simplemente dirá "Escuchando..." para dar una sensación más fluida al usuario.
         };
 
         recognition.onerror = (event) => {
