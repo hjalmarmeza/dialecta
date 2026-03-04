@@ -681,13 +681,13 @@ body {
    CONTROLES INFERIORES (PTT Botón)
    ========================================= */
 .ptt-controls {
-    padding: 20px;
+    padding: 12px 20px;
     border-top: 1px solid var(--border-glass);
-    background: linear-gradient(0deg, rgba(20, 20, 30, 0.9) 0%, rgba(20, 20, 30, 0) 100%);
+    background: linear-gradient(0deg, rgba(20, 20, 30, 0.95) 0%, rgba(20, 20, 30, 0) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
 }
 
 .status-indicator {
@@ -704,7 +704,7 @@ body {
     position: relative;
     width: 100%;
     max-width: 360px;
-    margin-top: 20px;
+    margin-top: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -718,14 +718,14 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 40px;
-    padding: 10px 20px;
+    padding: 6px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     /* Dejamos espacio abajo para el botón de micrófono que se superpone */
-    padding-bottom: 25px;
-    margin-bottom: -45px;
+    padding-bottom: 22px;
+    margin-bottom: -35px;
     /* Tira del micrófono hacia arriba */
 }
 
@@ -739,12 +739,12 @@ body {
 }
 
 .flag-icon {
-    font-size: 20px;
+    font-size: 16px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .bold-select {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-primary);
     background: transparent !important;
@@ -769,7 +769,7 @@ body {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-size: 20px;
+    font-size: 16px;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0 10px;

@@ -589,8 +589,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}`;
 
+        const now = new Date();
+        const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
         bubble.innerHTML = `
-            <div style="font-size: 11px; margin-bottom: 4px; opacity: 0.7; font-weight: bold; color: ${isOutgoing ? 'var(--text-translated)' : 'var(--accent-secondary)'};">${isOutgoing ? getT().youMsg : senderName}</div>
+            <div style="font-size: 11px; margin-bottom: 4px; opacity: 0.7; font-weight: bold; color: ${isOutgoing ? 'var(--text-translated)' : 'var(--accent-secondary)'}; display: flex; justify-content: space-between; align-items: center;">
+                <span>${isOutgoing ? getT().youMsg : senderName}</span>
+                <span class="msg-time" style="font-size: 9px; opacity: 0.6; font-weight: normal;">${timeString}</span>
+            </div>
             <div class="msg-original">${originalText}</div>
             <div class="msg-translated">${translatedText}</div>
             <button class="play-btn" aria-label="Reproducir traducción"><i class="ph-fill ph-play-circle"></i></button>
