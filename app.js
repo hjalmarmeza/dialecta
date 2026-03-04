@@ -729,16 +729,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onresult = (event) => {
             resetSilenceTimer(); // El usuario habló, reseteamos el reloj
-            interimTranscript = '';
 
-            // Acumular fragmentos
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
+            let tempFinal = '';
+            let tempInterim = '';
+
+            // Reconstruimos SIEMPRE la frase entera desde el array de la sesión activa
+            // Esto neutraliza un bug severo de Android Chrome donde se re-envían strings completos sumados.
+            for (let i = 0; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + " ";
+                    tempFinal += event.results[i][0].transcript + " ";
                 } else {
-                    interimTranscript += event.results[i][0].transcript + " ";
+                    tempInterim += event.results[i][0].transcript + " ";
                 }
             }
+
+            finalTranscript = tempFinal;
+            interimTranscript = tempInterim;
         };
 
         recognition.onerror = (event) => {
