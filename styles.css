@@ -623,24 +623,30 @@ body {
 }
 
 /* =========================================
-   HISTORIAL DE CHAT
+   HISTORIAL DE CHAT - WRAPPER CLIP (Ocultar scrollbar nativo iOS)
    ========================================= */
-.chat-history {
+
+/* Contenedor externo: su overflow:hidden corta físicamente
+   el indicador de scroll nativo de iOS que CSS no puede ocultar */
+.chat-history-clip {
     flex: 1;
-    /* Truco definitivo para ocultar el scrollbar nativo en iOS Safari:
-       El margen negativo empuja el scrollbar fuera del área visible del contenedor,
-       y el overflow:hidden del .app-container lo oculta completamente. */
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+    /* Crítico para flex: permite que el contenedor se comprima */
+}
+
+.chat-history {
+    /* 20px más ancho que el clip para empujar el scrollbar fuera del área visible */
+    width: calc(100% + 20px);
+    height: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
     padding: 20px 20px 20px 20px;
-    /* Empujamos el scrollbar nativo de iOS a la derecha fuera del clip */
-    margin-right: -20px;
-    padding-right: 40px;
     display: flex;
     flex-direction: column;
     gap: 16px;
 
-    /* Capas adicionales de ocultación para todos los navegadores */
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     resize: none !important;

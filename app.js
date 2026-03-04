@@ -484,7 +484,9 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition = new SpeechRecognition();
         // iOS/Safari: continuous=true causa bloqueo silencioso del mic. Usamos false con auto-reinicio manual.
         recognition.continuous = !isMobileSafari;
-        recognition.interimResults = true; // Permite procesar resultados largos sin cortar
+        // En iOS desactivamos interimResults para aliviar la CPU del dispositivo móvil
+        // y evitar que el dispositivo "se esfuerce demasiado" con actualizaciones constantes.
+        recognition.interimResults = !isMobileSafari;
     } else {
         alert(getT().unsupported);
     }
@@ -522,6 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. FUNCIÓN PARA HABLAR EL TEXTO TRADUCIDO --- //
     function speakText(text, lang) {
         if (!synth || !text) return;
+        // No hablar mientras el usuario está grabando (evita que el mic capture la voz sintetizada)
+        if (isRecording) return;
 
         // Limpiar caché TTS interno por seguridad de sistema
         synth.cancel();
@@ -688,19 +692,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // SI SIGUE GRABANDO (El usuario NO ha presionado Stop todavía)
             // Significa que el navegador cortó el micro por "silencio prolongado" o por ser iOS (continuous=false)
             if (isRecording) {
-                // En iOS/Safari, recognition.start() después de onend necesita un pequeño delay
-                // para que el motor cierre el ciclo anterior antes de abrir uno nuevo.
+                // En iOS/Safari, recognition.start() después de onend necesita delay para cerrar el ciclo anterior.
+                // 400ms evitan el InvalidStateError y dan tiempo al motor de audio para reiniciarse limpiamente.
                 setTimeout(() => {
                     if (isRecording) { // Verificar de nuevo por si el usuario paró mientras esperábamos
                         try {
                             recognition.start();
                             return;
                         } catch (e) {
-                            // Si falla (ej. el usuario revocó el permiso), dejamos caer al flujo de reset
                             console.log("No se pudo auto-reiniciar:", e.name, e.message);
                         }
                     }
-                }, 100);
+                }, 400);
                 return; // Salimos aquí para no ejecutar el procesamiento de texto todavía
             }
 
