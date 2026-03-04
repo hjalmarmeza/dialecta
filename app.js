@@ -516,75 +516,78 @@ document.addEventListener('DOMContentLoaded', () => {
         // Limpiar caché TTS interno por seguridad de sistema
         synth.cancel();
 
-        // Aplicamos el formateo sintético si por alguna razón el texto llega sin puntos ni conectores 
-        let formattedText = text.replace(/ (pero|porque|aunque|entonces|además|sin embargo|y|but|because|although|then|and|mais|parce que|donc|et) /gi, ', $1 ');
-        formattedText = formattedText.replace(/ (entonces|además|por lo tanto|sin embargo|then|therefore|donc) /gi, '. $1 ');
-        formattedText = formattedText.charAt(0).toUpperCase() + formattedText.slice(1);
-        if (!/[.!?]$/.test(formattedText)) {
-            formattedText += ".";
-        }
-
-        const utterance = new SpeechSynthesisUtterance(formattedText);
-        utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
-
-        // Velocidad y Tono estabilizados: 0.9 y 1.0 previenen distorsión robótica en iOS y Android
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-
-        // Inyectar automáticamente la MEJOR voz masculina disponible (Tier List / Prioridad)
-        const voices = synth.getVoices();
-        const targetLangPrefix = lang.split('-')[0];
-
-        // Diccionario ordenado de las mejores voces masculinas por idioma
-        // iOS/Mac usan "Premium" o "Enhanced". Android usa Cloud Network o "Google...".
-        const premiumMaleVoices = {
-            'es': ["Jorge Premium", "Jorge Enhanced", "Jorge", "Diego", "Google español", "Pablo"],
-            'en': ["Alex", "Daniel Premium", "Daniel Enhanced", "Daniel", "Google UK English Male", "Google US English Male", "Fred"],
-            'fr': ["Thomas Premium", "Thomas Enhanced", "Thomas", "Paul", "Google français"],
-            'de': ["Markus Premium", "Markus Enhanced", "Markus", "Google Deutsch"],
-            'it': ["Luca Premium", "Luca Enhanced", "Luca", "Google italiano"],
-            'pt': ["Tiago Premium", "Tiago Enhanced", "Tiago", "Google português do Brasil"],
-            'ja': ["Otoya Premium", "Otoya Enhanced", "Otoya", "Google 日本語"],
-            'zh': ["Li-mu", "Google 普通话 (中国大陆)"]
-        };
-
-        const preferredNames = premiumMaleVoices[targetLangPrefix] || ["Premium", "Enhanced", "Male", "male", "Hombre", "man"];
-        let bestVoice = null;
-
-        // 1. Intentar encontrar una coincidencia exacta de nuestra lista VIP garantizando máxima calidad
-        for (const name of preferredNames) {
-            const match = voices.find(v => v.lang.startsWith(targetLangPrefix) && v.name.includes(name));
-            if (match) {
-                bestVoice = match;
-                break;
+        // En Safari y iOS, si llamamos a speak justo después de cancel, se traga el audio.
+        // Un pequeño timeout garantiza que el buffer se libere.
+        setTimeout(() => {
+            // Aplicamos el formateo sintético si por alguna razón el texto llega sin puntos ni conectores 
+            let formattedText = text.replace(/ (pero|porque|aunque|entonces|además|sin embargo|y|but|because|although|then|and|mais|parce que|donc|et) /gi, ', $1 ');
+            formattedText = formattedText.replace(/ (entonces|además|por lo tanto|sin embargo|then|therefore|donc) /gi, '. $1 ');
+            formattedText = formattedText.charAt(0).toUpperCase() + formattedText.slice(1);
+            if (!/[.!?]$/.test(formattedText)) {
+                formattedText += ".";
             }
-        }
 
-        // 2. Si no encuentra las VIP, buscar cualquier voz "Online", "Network" o "Cloud" que suelen ser humanas
-        if (!bestVoice) {
-            bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && (v.name.includes('Online') || v.name.includes('Network') || v.name.includes('Premium')));
-        }
+            const utterance = new SpeechSynthesisUtterance(formattedText);
+            utterance.lang = lang; // Ej. 'es-ES' o 'en-US'
 
-        // 3. Fallback a locuciones masculinas genéricas
-        if (!bestVoice) {
-            const genericMaleKeywords = ["Male", "male", "Hombre", "man", "Boy"];
-            bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && genericMaleKeywords.some(kw => v.name.includes(kw)));
-        }
+            // Velocidad y Tono estabilizados: 0.9 y 1.0 previenen distorsión robótica en iOS y Android
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
 
-        if (bestVoice) {
-            utterance.voice = bestVoice;
-        } else {
-            // 3. Fallback Supremo: Si el motor web es súper básico y ni siquiera dice géneros, tomar la voz por defecto que brinde el sistema para ese idioma
-            const fallbackVoice = voices.find(v => v.lang.startsWith(targetLangPrefix));
-            if (fallbackVoice) utterance.voice = fallbackVoice;
-        }
+            // Inyectar automáticamente la MEJOR voz masculina disponible (Tier List / Prioridad)
+            const voices = synth.getVoices();
+            const targetLangPrefix = lang.split('-')[0];
 
-        // Efecto visual al hablar
-        utterance.onstart = () => { document.body.style.boxShadow = "inset 0 0 50px var(--accent-glow)"; };
-        utterance.onend = () => { document.body.style.boxShadow = "none"; };
-        utterance.onerror = () => { document.body.style.boxShadow = "none"; };
+            // Diccionario ordenado de las mejores voces masculinas por idioma
+            // iOS/Mac usan "Premium" o "Enhanced". Android usa Cloud Network o "Google...".
+            const premiumMaleVoices = {
+                'es': ["Jorge Premium", "Jorge Enhanced", "Jorge", "Diego", "Google español", "Pablo"],
+                'en': ["Alex", "Daniel Premium", "Daniel Enhanced", "Daniel", "Google UK English Male", "Google US English Male", "Fred"],
+                'fr': ["Thomas Premium", "Thomas Enhanced", "Thomas", "Paul", "Google français"],
+                'de': ["Markus Premium", "Markus Enhanced", "Markus", "Google Deutsch"],
+                'it': ["Luca Premium", "Luca Enhanced", "Luca", "Google italiano"],
+                'pt': ["Tiago Premium", "Tiago Enhanced", "Tiago", "Google português do Brasil"],
+                'ja': ["Otoya Premium", "Otoya Enhanced", "Otoya", "Google 日本語"],
+                'zh': ["Li-mu", "Google 普通话 (中国大陆)"]
+            };
 
-        synth.speak(utterance);
+            const preferredNames = premiumMaleVoices[targetLangPrefix] || ["Premium", "Enhanced", "Male", "male", "Hombre", "man"];
+            let bestVoice = null;
+
+            // 1. Intentar encontrar una coincidencia exacta de nuestra lista VIP
+            for (const name of preferredNames) {
+                const match = voices.find(v => v.lang.startsWith(targetLangPrefix) && v.name.includes(name));
+                if (match) {
+                    bestVoice = match;
+                    break;
+                }
+            }
+
+            // 2. Si no, buscar "Online", "Network" o "Cloud"
+            if (!bestVoice) {
+                bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && (v.name.includes('Online') || v.name.includes('Network') || v.name.includes('Premium')));
+            }
+
+            // 3. Genérica
+            if (!bestVoice) {
+                const genericMaleKeywords = ["Male", "male", "Hombre", "man", "Boy"];
+                bestVoice = voices.find(v => v.lang.startsWith(targetLangPrefix) && genericMaleKeywords.some(kw => v.name.includes(kw)));
+            }
+
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+            } else {
+                const fallbackVoice = voices.find(v => v.lang.startsWith(targetLangPrefix));
+                if (fallbackVoice) utterance.voice = fallbackVoice;
+            }
+
+            // Efecto visual al hablar
+            utterance.onstart = () => { document.body.style.boxShadow = "inset 0 0 50px var(--accent-glow)"; };
+            utterance.onend = () => { document.body.style.boxShadow = "none"; };
+            utterance.onerror = () => { document.body.style.boxShadow = "none"; };
+
+            synth.speak(utterance);
+        }, 50);
     }
 
     // --- 4. FUNCIÓN PARA CREAR BURBUJAS DE CHAT EN LA PANTALLA --- //
@@ -753,6 +756,14 @@ document.addEventListener('DOMContentLoaded', () => {
         manualInputForm.addEventListener('submit', (e) => {
             e.preventDefault();
 
+            // WARM-UP DEL WEBSPEECH ENGINE SÍNCRONO: Desbloquea iOS/Safari activando voz por teclado
+            if (synth && synth.state === 'paused') synth.resume();
+            if (synth) {
+                let ut = new SpeechSynthesisUtterance('');
+                ut.volume = 0;
+                synth.speak(ut);
+            }
+
             // En Modo Sala es obligatorio el nombre
             if (currentMode === 'room' && !usernameInput.value.trim()) {
                 alert(getT().alertName);
@@ -779,6 +790,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleRecording = (e) => {
         // Evitamos doble disparo
         if (e && e.cancelable) e.preventDefault();
+
+        // WARM-UP DEL WEBSPEECH ENGINE SÍNCRONO: Desbloquea iOS/Safari permitiéndole reproducir después asincronamente
+        if (synth && synth.state === 'paused') synth.resume();
+        if (synth) {
+            let ut = new SpeechSynthesisUtterance('');
+            ut.volume = 0;
+            synth.speak(ut);
+        }
 
         // En Modo Sala es obligatorio el nombre, en Modo Solo es opcional.
         if (currentMode === 'room' && !usernameInput.value.trim()) {
