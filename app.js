@@ -525,15 +525,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Detectar si es iOS / Safari móvil (NO soportan continuous=true de forma fiable)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/i.test(navigator.userAgent);
     const isMobileSafari = isIOS || /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         // APAGADO OBLIGATORIO PARA DESTRUIR LA ANOMALÍA ACUMULATIVA DE SAMSUNG/ANDROID.
-        // Asegura que event.results nunca sume un historial infinito de repeticiones.
-        recognition.continuous = false;
-        // Activamos interimResults para no perder frases si el usuario apaga manualmente (1 Toque) rápido:
-        recognition.interimResults = true;
+        recognition.continuous = !isMobileSafari && !isAndroid;
+        // LA CURA DEFINITIVA ANDROID:
+        // interimResults=true enciende el bug destructivo de Samsung/Google engine.
+        // Apagarlo mata el bug 100%. iOS y Desktop se mantienen intactos.
+        recognition.interimResults = !isAndroid;
     } else {
         alert(getT().unsupported);
     }
@@ -730,30 +732,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onresult = (event) => {
             resetSilenceTimer(); // El usuario habló, reseteamos el reloj
-            let safeFinal = '';
-            let safeInterim = '';
+            let currentInterim = '';
 
-            // Algoritmo Anti-Samsung-Duplication:
-            for (let i = 0; i < event.results.length; ++i) {
-                let segmentText = event.results[i][0].transcript;
-
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    // Si el motor de Android devuelve el historial acumulado en el nuevo segmento 
-                    // (ej: segment 1: "hola", segment 2: "hola a todos"), simplemente lo REEMPLAZAMOS
-                    // en lugar de sumarlo (lo que causaba el "hola hola a todos").
-                    if (safeFinal.length > 0 && segmentText.trim().toLowerCase().startsWith(safeFinal.trim().toLowerCase())) {
-                        safeFinal = segmentText + ' ';
-                    } else {
-                        safeFinal += segmentText + ' ';
-                    }
+                    finalTranscript += event.results[i][0].transcript + ' ';
                 } else {
-                    // Los borradores (interim) no importa sumarlos, solo queremos ver la última foto
-                    safeInterim = segmentText;
+                    currentInterim += event.results[i][0].transcript;
                 }
             }
-
-            finalTranscript = safeFinal;
-            interimTranscript = safeInterim;
+            interimTranscript = currentInterim;
         };
 
         recognition.onerror = (event) => {
