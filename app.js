@@ -80,11 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = {
         'es': {
             roomLabel: "Sala:", inviteBtn: "Invitar", inThisRoom: "En esta sala", yourName: "Tu Nombre:",
-            namePlaceholder: "Ej: Juan", meLabel: "Tú", otherPersonLabel: "Otra Persona:",
+            namePlaceholder: "Tu Nombre", meLabel: "Tú", otherPersonLabel: "Otra Persona:",
             safeRoomDesc: "Sala segura. Elige los idiomas y toca el botón para hablar o detenerte.",
             tapToTalk: "Toca para hablar", tapToStop: "Toca para detener", inviteTitle: "Invitar a Dialecta",
             inviteDesc: "¿Cómo deseas compartir la invitación?", copyLink: "Copiar Enlace",
-            alertName: "¡Espera! Escribe tu nombre primero (Ej: Juan) para que sepan quién invita.",
+            alertName: "¡Espera! Escribe tu nombre primero para que sepan quién invita.",
             statusConnecting: "Conectando...", statusListening: "Escuchando...", statusSending: "Enviando...",
             statusReady: "Listo para transmitir", statusIncoming: "Mensaje entrante...",
             unsupported: "Tu navegador no soporta el reconocimiento de voz. ¡Usa Chrome o Safari!",
@@ -100,11 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'en': {
             roomLabel: "Room:", inviteBtn: "Invite", inThisRoom: "In this room", yourName: "Your Name:",
-            namePlaceholder: "Ex: John", meLabel: "Me", otherPersonLabel: "Other:",
+            namePlaceholder: "Your Name", meLabel: "Me", otherPersonLabel: "Other:",
             safeRoomDesc: "Secure room. Choose your language and tap the center button to speak or stop.",
             tapToTalk: "Tap to talk", tapToStop: "Tap to stop", inviteTitle: "Invite a contact",
             inviteDesc: "How would you like to share the room invitation?", copyLink: "Copy Link",
-            alertName: "Wait! Write your name first (Ex: John) so they know who's inviting.",
+            alertName: "Wait! Write your name first so they know who's inviting.",
             statusConnecting: "Connecting...", statusListening: "Listening...", statusSending: "Sending...",
             statusReady: "Ready to transmit", statusIncoming: "Incoming message...",
             unsupported: "Your browser doesn't support speech recognition. Use Chrome or Safari!",
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         'fr': {
             roomLabel: "Salle:", inviteBtn: "Inviter", inThisRoom: "Dans cette salle", yourName: "Ton Nom:",
-            namePlaceholder: "Ex: Jean", meLabel: "Moi", otherPersonLabel: "Autre:",
+            namePlaceholder: "Ton Nom", meLabel: "Moi", otherPersonLabel: "Autre:",
             safeRoomDesc: "Salle sécurisée. Choisissez la langue et appuyez pour parler ou arrêter.",
             tapToTalk: "Appuyez pour parler", tapToStop: "Appuyez pour arrêter", inviteTitle: "Inviter un ami",
             inviteDesc: "Comment partager l'invitation ?", copyLink: "Copier le lien",

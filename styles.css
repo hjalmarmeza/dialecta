@@ -706,10 +706,12 @@ body {
 /* El Pill (Cápsula) de Idiomas */
 .modern-selectors {
     width: 100%;
+    max-width: 250px;
+    /* Exactamente igual a .pill-tabs-container */
     background: #1a1a24;
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 40px;
-    padding: 10px 20px;
+    padding: 10px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -721,23 +723,27 @@ body {
 .modern-selectors .select-wrapper {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex: 1;
     justify-content: center;
+    min-width: 0;
+    /* Permite que el texto se trunque */
 }
 
 .flag-icon {
-    font-size: 16px;
-    /* Retornado a un tamaño legible */
+    font-size: 15px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    flex-shrink: 0;
 }
 
 .bold-select {
-    font-size: 15px;
-    /* Más jerarquía */
+    font-size: 13px;
     font-weight: 700;
     color: #ffffff;
-    /* Blanco puro como en iOS */
+    max-width: 75px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
