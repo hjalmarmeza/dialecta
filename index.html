@@ -102,6 +102,15 @@
         <!-- Controles Inferiores (Walkie-Talkie) -->
         <footer class="ptt-controls">
 
+            <!-- Campo Discreto Manual (Fallback sin Voz) -->
+            <form id="manual-input-form" class="manual-input-form">
+                <input type="text" id="manual-text-input" class="glass-input manual-input-field"
+                    placeholder="Escribe aquí..." data-i18n-placeholder="typeToTranslate" autocomplete="off">
+                <button type="submit" id="manual-send-btn" class="glass-btn-small manual-send-btn">
+                    <i class="ph-fill ph-paper-plane-tilt"></i>
+                </button>
+            </form>
+
             <div class="status-indicator" id="status-text">Listo para transmitir</div>
 
             <div class="bottom-action-panel">

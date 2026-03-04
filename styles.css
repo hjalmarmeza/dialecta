@@ -988,3 +988,58 @@ body.is-recording .status-indicator {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--border-glass);
 }
+/* =========================================
+   INPUT MANUAL DISCRETO
+   ========================================= */
+.manual-input-form {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 2px;
+}
+
+.manual-input-field {
+    padding: 8px 12px;
+    height: 36px;
+    font-size: 13px;
+    flex: 1;
+    border-radius: 12px;
+    margin: 0;
+    min-width: 0;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.2s ease;
+}
+
+.manual-input-field:focus {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(99, 102, 241, 0.5);
+    outline: none;
+}
+
+.manual-send-btn {
+    height: 36px;
+    width: 44px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(99, 102, 241, 0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.manual-send-btn i {
+    font-size: 18px;
+}
+
+.manual-send-btn:active {
+    transform: scale(0.95);
+    background: rgba(99, 102, 241, 0.6);
+}

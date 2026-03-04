@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             shareBody: "Únete a mi sala en Dialecta para traducir nuestras voces en tiempo real:",
             voiceLabel: "Voz:", autoVoice: "Automática",
             clearConfirm: "¿Seguro que quieres borrar todos los mensajes de esta sala para ambos?",
+            typeToTranslate: "Escribe aquí para traducir...",
             langES: "Español", langEN: "Inglés (US)", langFR: "Francés", langDE: "Alemán",
             langIT: "Italiano", langPT: "Portugués (BR)", langJA: "Japonés", langZH: "Chino"
         },
@@ -108,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             shareBody: "Join my Dialecta room to translate our voices in real time:",
             voiceLabel: "Voice:", autoVoice: "Automatic",
             clearConfirm: "Are you sure you want to clear all messages in this room for both of you?",
+            typeToTranslate: "Type here to translate...",
             langES: "Spanish", langEN: "English (US)", langFR: "French", langDE: "German",
             langIT: "Italian", langPT: "Portuguese (BR)", langJA: "Japanese", langZH: "Chinese"
         },
@@ -127,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             shareBody: "Rejoins ma salle Dialecta pour traduire nos voix en direct:",
             voiceLabel: "Voix:", autoVoice: "Automatique",
             clearConfirm: "Êtes-vous sûr de vouloir effacer tous les messages de cette salle pour tous les deux ?",
+            typeToTranslate: "Écrire ici pour traduire...",
             langES: "Espagnol", langEN: "Anglais (US)", langFR: "Français", langDE: "Allemand",
             langIT: "Italien", langPT: "Portugais (BR)", langJA: "Japonais", langZH: "Chinois"
         }
@@ -707,35 +710,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const textToSend = rawText;
 
-            if (textToSend) {
-                statusText.innerText = getT().statusSending;
-
-                const currentUser = usernameInput.value.trim() || getT().anon;
-                const miIdioma = myLangSelect.value;
-
-                // ENVÍO REAL A FIREBASE
-                push(messagesRef, {
-                    deviceId: myDeviceId,
-                    senderName: currentUser,
-                    originalText: textToSend,
-                    originalLang: miIdioma,
-                    timestamp: serverTimestamp()
-                }).catch((error) => {
-                    console.error("Error de Firebase:", error);
-                    alert("Error de conexión al enviar el mensaje.");
-                }).finally(() => {
-                    // Limpieza garantizada después de enviar o fallar
-                    setTimeout(() => {
-                        statusText.innerText = getT().statusReady;
-                    }, 1200);
-                });
-            } else {
-                // Si paró de grabar y no captó ningún finalTranscript
-                statusText.innerText = getT().statusReady;
-            }
+            sendMessageToFirebase(textToSend);
 
             finalTranscript = ''; // Limpiar siempre al terminar
         };
+    }
+
+    // --- 5.5 FUNCIÓN GENERAL DE ENVÍO A FIREBASE (Voz y Texto) --- //
+    function sendMessageToFirebase(textToSend) {
+        if (textToSend) {
+            statusText.innerText = getT().statusSending;
+
+            const currentUser = usernameInput.value.trim() || getT().anon;
+            const miIdioma = myLangSelect.value;
+
+            // ENVÍO REAL A FIREBASE
+            push(messagesRef, {
+                deviceId: myDeviceId,
+                senderName: currentUser,
+                originalText: textToSend,
+                originalLang: miIdioma,
+                timestamp: serverTimestamp()
+            }).catch((error) => {
+                console.error("Error de Firebase:", error);
+                alert("Error de conexión al enviar el mensaje.");
+            }).finally(() => {
+                // Limpieza garantizada después de enviar o fallar
+                setTimeout(() => {
+                    if (statusText) statusText.innerText = getT().statusReady;
+                }, 1200);
+            });
+        } else {
+            if (statusText) statusText.innerText = getT().statusReady;
+        }
+    }
+
+    // --- 5.8 EVENTOS INPUT MANUAL EN SILENCIO --- //
+    const manualInputForm = document.getElementById('manual-input-form');
+    const manualTextInput = document.getElementById('manual-text-input');
+
+    if (manualInputForm) {
+        manualInputForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // En Modo Sala es obligatorio el nombre
+            if (currentMode === 'room' && !usernameInput.value.trim()) {
+                alert(getT().alertName);
+                usernameInput.focus();
+                return;
+            }
+
+            const text = manualTextInput.value.trim();
+            if (!text) return; // evitar enviar vacío
+
+            // Enviar formateado y listo
+            let formattedText = text.charAt(0).toUpperCase() + text.slice(1);
+            if (!/[.!?]$/.test(formattedText)) {
+                formattedText += ".";
+            }
+
+            sendMessageToFirebase(formattedText);
+            manualTextInput.value = ''; // Limpiar input para siguiente
+            manualTextInput.blur(); // Minimizar teclado en móviles
+        });
     }
 
     // --- 6. SIMULACIÓN DEL BOTÓN TOGGLE (Tocar para Grabar / Tocar para Detener) --- //
