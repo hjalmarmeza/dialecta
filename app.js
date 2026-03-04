@@ -854,11 +854,23 @@ document.addEventListener('DOMContentLoaded', () => {
             statusText.innerText = getT().statusListening;
             if (instructionEl) instructionEl.innerText = getT().tapToStop;
 
+            // DESBLOQUEO DEL AUDIOCTX EN iOS (CRÍTICO para auto-play de la traducción):
+            // iOS Safari bloquea cualquier audio que no provenga del gesto original del usuario.
+            // Hacemos un speak() silencioso aquí (sincrónicamente en el click) para "abrir la puerta"
+            // del AudioContext. Así, cuando la traducción termine y speakText() se llame de forma
+            // asíncrona, iOS ya tiene permiso y reproduce la voz automáticamente.
+            if (synth) {
+                try {
+                    const unlock = new SpeechSynthesisUtterance('');
+                    unlock.volume = 0;
+                    synth.speak(unlock);
+                } catch (e) { /* Ignorar si falla */ }
+            }
+
             recognition.lang = myLangSelect.value;
 
             // CRÍTICO iOS: recognition.start() DEBE llamarse sincrónicamente
-            // dentro del event handler del usuario. Cualquier llamada asíncrona
-            // (getUserMedia, .then(), await) antes de start() rompe el permiso en iOS Safari.
+            // dentro del event handler del usuario.
             try {
                 recognition.start();
             } catch (err) {
